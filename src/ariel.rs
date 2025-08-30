@@ -92,6 +92,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<()> {
 
     // crate
     {
+        board_crate.manifest.package.edition = Some(crate::krate::Edition::workspace());
+        board_crate.manifest.package.rust_version = Some(crate::krate::RustVersion::workspace());
+
         // features
         board_crate
             .manifest
