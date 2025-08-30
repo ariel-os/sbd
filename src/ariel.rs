@@ -1,13 +1,28 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
+use anyhow::Result;
 use camino::Utf8Path;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     krate::{Crate, DependencyFull},
     laze::{LazeContext, LazeFile, StringOrVecString},
+    parse_sbd_files,
     sbd::{Board, Button, Led, SbdFile},
 };
+
+#[derive(argh::FromArgs, Debug)]
+#[argh(subcommand, name = "generate-ariel")]
+/// generate Ariel OS specific files
+pub struct GenerateArielArgs {
+    /// the name of the directory containing board descriptions
+    #[argh(positional)]
+    sbd_dir: String,
+
+    /// ariel os boards crate output folder
+    #[argh(option, short = 'o', default = "String::from(\"ariel-os-boards\")")]
+    output: String,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub struct Ariel {
@@ -24,21 +39,13 @@ pub struct ArielBoardExt {
     pub swi: Option<String>,
 }
 
-pub fn render_build_rs(boards: &[Board]) -> String {
-    let mut build_rs = String::new();
+pub fn generate(args: GenerateArielArgs) -> Result<()> {
+    let sbd_file = parse_sbd_files(args.sbd_dir.as_str())?;
 
-    build_rs.push_str("pub fn main() {\n");
+    // Finally, render the ariel crate.
+    render_ariel_board_crate(&sbd_file, args.output.as_str().into())?;
 
-    for board in boards {
-        build_rs.push_str(&format!(
-            "    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");\n",
-            board.name
-        ))
-    }
-
-    build_rs.push_str("}\n");
-
-    build_rs
+    Ok(())
 }
 
 pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<(), std::io::Error> {
@@ -171,12 +178,29 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<(), std
     Ok(())
 }
 
+pub fn render_build_rs(boards: &[Board]) -> String {
+    let mut build_rs = String::new();
+
+    build_rs.push_str("pub fn main() {\n");
+
+    for board in boards {
+        build_rs.push_str(&format!(
+            "    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");\n",
+            board.name
+        ))
+    }
+
+    build_rs.push_str("}\n");
+
+    build_rs
+}
+
 fn handle_crate_quirks(boards: &[Board], init_body: &mut String) {
     for board in boards {
         for quirk in &board.quirks {
             match quirk {
                 crate::sbd::Quirk::SetPin(set_pin_op) => {
-                    handle_set_bin_op(&board.name, &set_pin_op, init_body);
+                    handle_set_bin_op(&board.name, set_pin_op, init_body);
                 }
             }
         }
