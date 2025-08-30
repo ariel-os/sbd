@@ -171,10 +171,11 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<()> {
         }
         laze_file.builders = Some(laze_builders);
 
+        let mut laze_file_str = String::from("# yamllint disable-file\n\n");
+        laze_file_str.push_str(&laze_file.to_string().unwrap());
+
         // add to crate
-        board_crate
-            .files
-            .insert("laze.yml".into(), laze_file.to_string().unwrap());
+        board_crate.files.insert("laze.yml".into(), laze_file_str);
     }
 
     board_crate.write_to_directory(out)?;
