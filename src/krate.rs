@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 
@@ -17,27 +18,23 @@ impl Crate {
         }
     }
 
-    pub fn write_to_directory(&self, path: &Utf8Path) -> Result<(), std::io::Error> {
+    pub fn write_to_directory(&self, path: &Utf8Path) -> Result<()> {
         let manifest_path = path.join("Cargo.toml");
 
         if path.exists() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::AlreadyExists,
                 "Directory already exists",
-            ));
+            )
+            .into());
         }
 
         std::fs::create_dir_all(path)?;
 
         let manifest_content = toml::to_string(&self.manifest).unwrap();
         std::fs::write(manifest_path, manifest_content)?;
-        for (file, content) in &self.files {
-            let file_path = path.join(file);
-            if let Some(parent) = file_path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            std::fs::write(file_path, content)?;
-        }
+
+        crate::utils::write_all(path, self.files.iter())?;
 
         Ok(())
     }

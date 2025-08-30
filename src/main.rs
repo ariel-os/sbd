@@ -5,7 +5,10 @@ use yaml_hash::YamlHash;
 mod ariel;
 mod krate;
 mod laze;
+mod pin2tuple;
+mod riot;
 mod sbd;
+mod utils;
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(description = "SDB file parser")]
@@ -22,6 +25,7 @@ struct Args {
 #[argh(subcommand)]
 enum Subcommands {
     GenerateAriel(ariel::GenerateArielArgs),
+    GenerateRiot(riot::GenerateRiotArgs),
 }
 
 fn main() -> anyhow::Result<()> {
@@ -34,6 +38,7 @@ fn main() -> anyhow::Result<()> {
 
     match args.subcommand {
         Subcommands::GenerateAriel(args) => ariel::generate(args)?,
+        Subcommands::GenerateRiot(args) => riot::generate(args)?,
     }
     Ok(())
 }

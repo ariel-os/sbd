@@ -48,7 +48,7 @@ pub fn generate(args: GenerateArielArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<(), std::io::Error> {
+pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<()> {
     let mut board_crate = Crate::new("ariel-os-boards");
 
     let socs: HashSet<String> = HashSet::from_iter(

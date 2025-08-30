@@ -1,8 +1,12 @@
 use std::collections::BTreeSet;
 
-use crate::ariel::{Ariel, ArielBoardExt};
 use serde::{Deserialize, Serialize};
 use serde_with::{KeyValueMap, serde_as};
+
+use crate::{
+    ariel::{Ariel, ArielBoardExt},
+    riot::{Riot, RiotBoardExt},
+};
 
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,6 +16,7 @@ pub struct SbdFile {
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub boards: Option<Vec<Board>>,
     pub ariel: Option<Ariel>,
+    pub riot: Option<Riot>,
 }
 
 #[serde_as]
@@ -22,16 +27,21 @@ pub struct Board {
     pub soc: String,
     pub description: Option<String>,
     pub include: Option<Vec<String>>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub leds: Option<Vec<Led>>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub buttons: Option<Vec<Button>>,
     #[serde(default)]
     pub flags: BTreeSet<String>,
     #[serde(default)]
     pub quirks: Vec<Quirk>,
     #[serde(default)]
     pub ariel: ArielBoardExt,
+    pub debugger: Option<Debugger>,
+
+    // peripheral types
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub leds: Option<Vec<Led>>,
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub buttons: Option<Vec<Button>>,
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub uarts: Option<Vec<Uart>>,
 }
 
 impl Board {
@@ -89,4 +99,21 @@ pub enum PinLevel {
     #[default]
     High,
     Low,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Debugger {
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub uart: Option<Uart>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Uart {
+    #[serde(rename = "$key$")]
+    pub name: Option<String>,
+    pub rx_pin: String,
+    pub tx_pin: String,
+    pub cts_pin: Option<String>,
+    pub rts_pin: Option<String>,
 }
