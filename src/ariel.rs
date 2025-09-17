@@ -129,7 +129,7 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path) -> Result<()> {
         handle_crate_quirks(&boards, &mut init_body);
 
         let lib_rs = format!(
-            "#![no_std]\n\npub mod pins;\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {{\n{init_body}}}\n"
+            "#![no_std]\n\npub mod pins;\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {{\n{init_body}}}\n"
         );
 
         board_crate.files.insert("src/lib.rs".into(), lib_rs);
@@ -238,6 +238,7 @@ fn handle_set_bin_op(board_name: &str, set_pin_op: &crate::sbd::SetPinOp, init_b
 
 fn render_pins_rs(boards: &[Board]) -> String {
     let mut pins_rs = String::new();
+    pins_rs.push_str("#[allow(unused_imports)]\n");
     pins_rs.push_str("use ariel_os_hal::hal::peripherals;\n\n");
     for board in boards {
         if let Some(leds) = board.leds.as_ref() {
