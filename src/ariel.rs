@@ -1,3 +1,9 @@
+//! Ariel OS board support crate generation
+
+// Conventions:
+// - functions rendering a whole file are named render_<file_name>_<ext>, e.g., `render_board_rs`
+// - functions rendering a part of a file are named render_<somename>, e.g., `render_board_rs_init_body`
+//
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use anyhow::Result;
@@ -69,8 +75,6 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) 
         println!("warning: No SoCs defined for Ariel OS");
     }
 
-    let mut init_body = String::new();
-
     // filter boards with unknown SoCs
     let boards = sbd
         .boards
@@ -124,19 +128,29 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) 
             }),
         );
 
-        board_crate
-            .files
-            .insert("src/pins.rs".into(), render_pins_rs(&boards));
+        board_crate.manifest.dependencies.insert(
+            "cfg-if".into(),
+            crate::krate::Dependency::Full(DependencyFull {
+                workspace: Some(true),
+                ..Default::default()
+            }),
+        );
 
         board_crate
             .files
             .insert("build.rs".into(), render_build_rs(&boards));
 
-        handle_crate_quirks(&boards, &mut init_body);
+        for board in &boards {
+            let board_rs = render_board_rs(board);
+            board_crate
+                .files
+                .insert(format!("src/{}.rs", board.name).into(), board_rs);
+        }
 
-        let lib_rs = format!(
-            "// @generated\n#![no_std]\n\npub mod pins;\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {{\n{init_body}}}\n"
-        );
+        let mut lib_rs = String::new();
+        lib_rs.push_str("// @generated\n\n#![no_std]\n\n");
+
+        lib_rs.push_str(&render_boards_dispatch(&boards));
 
         board_crate.files.insert("src/lib.rs".into(), lib_rs);
     }
@@ -188,6 +202,38 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) 
     Ok(())
 }
 
+fn render_boards_dispatch(boards: &[Board]) -> String {
+    let mut s = String::new();
+
+    s.push_str("cfg_if::cfg_if! {\n   ");
+    for board in boards {
+        let board_name = &board.name;
+        s.push_str(&format!(" if #[cfg(context = \"{board_name}\")] {{\n"));
+        s.push_str(&format!("        include!(\"{board_name}.rs\");\n"));
+        s.push_str("    } else");
+    }
+    s.push_str(" {\n");
+    s.push_str("        // TODO\n");
+    s.push_str("    }\n");
+
+    s.push_str("}\n");
+
+    s
+}
+
+fn render_board_rs(board: &Board) -> String {
+    let pins = render_pins(board);
+
+    let mut init_body = String::new();
+    handle_quirks(board, &mut init_body);
+
+    let board_rs = format!(
+        "// @generated\n\n{pins}\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {{\n{init_body}}}\n"
+    );
+
+    board_rs
+}
+
 pub fn render_build_rs(boards: &[Board]) -> String {
     let mut build_rs = String::new();
 
@@ -206,21 +252,18 @@ pub fn render_build_rs(boards: &[Board]) -> String {
     build_rs
 }
 
-fn handle_crate_quirks(boards: &[Board], init_body: &mut String) {
-    for board in boards {
-        for quirk in &board.quirks {
-            match quirk {
-                crate::sbd::Quirk::SetPin(set_pin_op) => {
-                    handle_set_bin_op(&board.name, set_pin_op, init_body);
-                }
+fn handle_quirks(board: &Board, init_body: &mut String) {
+    for quirk in &board.quirks {
+        match quirk {
+            crate::sbd::Quirk::SetPin(set_pin_op) => {
+                handle_set_bin_op(set_pin_op, init_body);
             }
         }
     }
 }
 
-fn handle_set_bin_op(board_name: &str, set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) {
+fn handle_set_bin_op(set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) {
     let mut code = String::new();
-    code.push_str(&format!("#[cfg(context = \"{board_name}\")]\n"));
     code.push_str("{\n");
     if let Some(description) = &set_pin_op.description {
         code.push_str(&format!("    // {}\n", description));
@@ -243,21 +286,24 @@ fn handle_set_bin_op(board_name: &str, set_pin_op: &crate::sbd::SetPinOp, init_b
     init_body.push_str(&code);
 }
 
-fn render_pins_rs(boards: &[Board]) -> String {
-    let mut pins_rs = String::new();
-    pins_rs.push_str("// @generated\n");
-    pins_rs.push_str("#[allow(unused_imports)]\n");
-    pins_rs.push_str("use ariel_os_hal::hal::peripherals;\n\n");
-    for board in boards {
+fn render_pins(board: &Board) -> String {
+    let mut pins = String::new();
+
+    pins.push_str("pub mod pins {\n");
+
+    if board.has_leds() || board.has_buttons() {
+        pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
         if let Some(leds) = board.leds.as_ref() {
-            pins_rs.push_str(&render_led_pins(&board.name, leds));
+            pins.push_str(&render_led_pins(&board.name, leds));
         }
         if let Some(buttons) = board.buttons.as_ref() {
-            pins_rs.push_str(&render_button_pins(&board.name, buttons));
+            pins.push_str(&render_button_pins(&board.name, buttons));
         }
     }
 
-    pins_rs
+    pins.push_str("}\n");
+
+    pins
 }
 
 fn render_led_pins(board: &str, leds: &[Led]) -> String {
