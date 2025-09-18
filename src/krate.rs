@@ -58,40 +58,17 @@ pub enum Dependency {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum RustVersion {
-    Version(String),
+pub enum StringOrWorkspace {
+    String(String),
     Workspace(HashMap<String, bool>),
 }
 
-impl RustVersion {
+impl StringOrWorkspace {
     pub fn workspace() -> Self {
         Self::Workspace(HashMap::from([("workspace".into(), true)]))
     }
-    pub fn version(version: &str) -> Self {
-        Self::Version(version.into())
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum Edition {
-    Version(String),
-    // TODO: only need "edition.workspace=true", so maybe use custom serializer?
-    Workspace(HashMap<String, bool>),
-}
-
-impl Default for Edition {
-    fn default() -> Self {
-        Self::Version("2024".into())
-    }
-}
-
-impl Edition {
-    pub fn workspace() -> Self {
-        Self::Workspace(HashMap::from([("workspace".into(), true)]))
-    }
-    pub fn version(version: &str) -> Self {
-        Self::Version(version.into())
+    pub fn string(string: &str) -> Self {
+        Self::String(string.into())
     }
 }
 
@@ -119,10 +96,16 @@ impl Manifest {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Package {
     pub name: String,
-    pub edition: Option<Edition>,
+    pub edition: Option<StringOrWorkspace>,
+    pub license: Option<StringOrWorkspace>,
     #[serde(rename = "rust-version")]
-    pub rust_version: Option<RustVersion>,
+    pub rust_version: Option<StringOrWorkspace>,
 }
+
+pub fn workspace() -> Option<StringOrWorkspace> {
+    Some(StringOrWorkspace::workspace())
+}
+
 impl Package {
     fn new(name: &str) -> Self {
         Self {
