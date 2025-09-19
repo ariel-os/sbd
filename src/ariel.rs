@@ -4,7 +4,10 @@
 // - functions rendering a whole file are named render_<file_name>_<ext>, e.g., `render_board_rs`
 // - functions rendering a part of a file are named render_<somename>, e.g., `render_board_rs_init_body`
 //
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::{
+    collections::{BTreeMap, BTreeSet, HashSet},
+    str::FromStr,
+};
 
 use anyhow::Result;
 use camino::Utf8Path;
@@ -26,12 +29,37 @@ pub struct GenerateArielArgs {
     sbd_dir: String,
 
     /// overwrite existing files
-    #[argh(switch)]
-    overwrite: bool,
+    #[argh(option, short = 'm', from_str_fn(parse_mode))]
+    mode: Option<Mode>,
 
     /// ariel os boards crate output folder
     #[argh(option, short = 'o', default = "String::from(\"ariel-os-boards\")")]
     output: String,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub enum Mode {
+    #[default]
+    Create,
+    Overwrite,
+    Check,
+}
+
+impl FromStr for Mode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "create" => Ok(Mode::Create),
+            "overwrite" => Ok(Mode::Overwrite),
+            "check" => Ok(Mode::Check),
+            _ => Err(format!("Invalid mode: {}", s)),
+        }
+    }
+}
+
+fn parse_mode(s: &str) -> Result<Mode, String> {
+    Mode::from_str(s)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
@@ -51,14 +79,15 @@ pub struct ArielBoardExt {
 
 pub fn generate(args: GenerateArielArgs) -> Result<()> {
     let sbd_file = parse_sbd_files(args.sbd_dir.as_str())?;
+    let mode = args.mode.unwrap_or_default();
 
     // Finally, render the ariel crate.
-    render_ariel_board_crate(&sbd_file, args.output.as_str().into(), args.overwrite)?;
+    render_ariel_board_crate(&sbd_file, args.output.as_str().into(), mode)?;
 
     Ok(())
 }
 
-pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) -> Result<()> {
+pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, mode: Mode) -> Result<()> {
     let mut board_crate = Crate::new("ariel-os-boards");
 
     let chips: HashSet<String> = HashSet::from_iter(
@@ -198,7 +227,7 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) 
         board_crate.files.insert("laze.yml".into(), laze_file_str);
     }
 
-    board_crate.write_to_directory(out, overwrite)?;
+    board_crate.write_to_directory(out, mode == Mode::Overwrite)?;
     Ok(())
 }
 
