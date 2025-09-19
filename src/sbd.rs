@@ -24,7 +24,7 @@ pub struct SbdFile {
 pub struct Board {
     #[serde(rename = "$key$")]
     pub name: String,
-    pub soc: String,
+    pub chip: String,
     pub description: Option<String>,
     pub include: Option<Vec<String>>,
     #[serde(default)]

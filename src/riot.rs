@@ -25,16 +25,16 @@ pub struct GenerateRiotArgs {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub struct Riot {
-    pub socs: BTreeMap<String, RiotSocMapEntry>,
+    pub chips: BTreeMap<String, RiotChipMapEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotSocMapEntry {
+pub struct RiotChipMapEntry {
     cpu: String,
     cpu_model: String,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     quirks: BTreeMap<String, RiotQirkEntry>,
-    peripherals: Option<RiotSocPeripherals>,
+    peripherals: Option<RiotChipPeripherals>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
@@ -52,13 +52,13 @@ pub struct RiotQirkEntry {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotSocPeripherals {
+pub struct RiotChipPeripherals {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    uarts: BTreeMap<String, RiotSocUartPeripheral>,
+    uarts: BTreeMap<String, RiotChipUartPeripheral>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotSocUartPeripheral {
+pub struct RiotChipUartPeripheral {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     config: BTreeMap<String, String>,
     isr: Option<String>,
@@ -133,25 +133,25 @@ pub fn generate(args: GenerateRiotArgs) -> Result<()> {
 }
 
 pub fn render_riot_boards_dir(sbd: &SbdFile, out: &Utf8Path) -> Result<()> {
-    let socs: HashSet<String> =
-        HashSet::from_iter(sbd.riot.clone().unwrap_or_default().socs.keys().cloned());
+    let chips: HashSet<String> =
+        HashSet::from_iter(sbd.riot.clone().unwrap_or_default().chips.keys().cloned());
 
-    if socs.is_empty() {
-        println!("warning: No supported SoCs defined for RIOT OS");
+    if chips.is_empty() {
+        println!("warning: No supported chips defined for RIOT OS");
     }
 
-    // filter boards with unknown SoCs
+    // filter boards with unknown chips
     let boards = sbd
         .boards
         .iter()
         .flatten()
         .filter(|board| {
-            if socs.contains(&board.soc) {
+            if chips.contains(&board.chip) {
                 true
             } else {
                 println!(
-                    "warning: skipping board {}, unknown SoC {}",
-                    board.name, board.soc
+                    "warning: skipping board {}, unknown chip {}",
+                    board.name, board.chip
                 );
                 false
             }
@@ -201,9 +201,9 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     makefile.push_str("MODULE = board");
 
     // both unwraps should always succeed (filtered in caller)
-    let riot_soc = sbd.riot.as_ref().unwrap().socs.get(&board.soc).unwrap();
-    makefile_features.push_str(&format!("CPU = {}\n", riot_soc.cpu));
-    makefile_features.push_str(&format!("CPU_MODEL = {}\n", riot_soc.cpu_model));
+    let riot_chip = sbd.riot.as_ref().unwrap().chips.get(&board.chip).unwrap();
+    makefile_features.push_str(&format!("CPU = {}\n", riot_chip.cpu));
+    makefile_features.push_str(&format!("CPU_MODEL = {}\n", riot_chip.cpu_model));
 
     // handle file quirks
     let quirk_file_map = [
@@ -212,7 +212,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     ];
 
     for (filename, file_obj) in quirk_file_map {
-        if let Some(quirk) = riot_soc.quirks.get(filename) {
+        if let Some(quirk) = riot_chip.quirks.get(filename) {
             for snip in &quirk.body {
                 file_obj.content_snips.push(snip.to_string());
             }
@@ -232,7 +232,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     // UARTs
     //let mut uart_isrs = Vec::new();
     uarts.extend(board.uarts.iter().flatten());
-    let mut uart_peripherals = riot_soc.peripherals.as_ref().unwrap().uarts.clone();
+    let mut uart_peripherals = riot_chip.peripherals.as_ref().unwrap().uarts.clone();
     let mut uarts_configured = Vec::new();
     for uart in uarts {
         // get the map key of the peripheral that works for this UART's pins

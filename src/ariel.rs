@@ -36,7 +36,7 @@ pub struct GenerateArielArgs {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub struct Ariel {
-    pub socs: Option<Vec<String>>,
+    pub chips: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
@@ -61,32 +61,32 @@ pub fn generate(args: GenerateArielArgs) -> Result<()> {
 pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) -> Result<()> {
     let mut board_crate = Crate::new("ariel-os-boards");
 
-    let socs: HashSet<String> = HashSet::from_iter(
+    let chips: HashSet<String> = HashSet::from_iter(
         sbd.ariel
             .clone()
             .unwrap_or_default()
-            .socs
+            .chips
             .iter()
             .flatten()
             .cloned(),
     );
 
-    if socs.is_empty() {
-        println!("warning: No SoCs defined for Ariel OS");
+    if chips.is_empty() {
+        println!("warning: No chips defined for Ariel OS");
     }
 
-    // filter boards with unknown SoCs
+    // filter boards with unknown chips
     let boards = sbd
         .boards
         .iter()
         .flatten()
         .filter(|board| {
-            if socs.contains(&board.soc) {
+            if chips.contains(&board.chip) {
                 true
             } else {
                 println!(
-                    "warning: skipping board {}, unknown SoC {}",
-                    board.name, board.soc
+                    "warning: skipping board {}, unknown chip {}",
+                    board.name, board.chip
                 );
                 false
             }
@@ -161,7 +161,7 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, overwrite: bool) 
         let mut laze_builders = Vec::new();
         for board in boards {
             let mut board_builder = LazeContext::new(&board.name);
-            board_builder.parent = Some(board.soc.clone());
+            board_builder.parent = Some(board.chip.clone());
             board_builder.provides.extend(board.flags.clone());
             board_builder.provides.extend(board.ariel.flags.clone());
 
