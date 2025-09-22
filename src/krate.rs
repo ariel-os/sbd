@@ -67,6 +67,7 @@ impl StringOrWorkspace {
     pub fn workspace() -> Self {
         Self::Workspace(HashMap::from([("workspace".into(), true)]))
     }
+    #[expect(dead_code, reason = "currently unused, unmark when it is")]
     pub fn string(string: &str) -> Self {
         Self::String(string.into())
     }

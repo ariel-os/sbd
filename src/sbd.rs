@@ -33,6 +33,8 @@ pub struct Board {
     pub quirks: Vec<Quirk>,
     #[serde(default)]
     pub ariel: ArielBoardExt,
+    #[serde(default)]
+    pub riot: RiotBoardExt,
     pub debugger: Option<Debugger>,
 
     // peripheral types

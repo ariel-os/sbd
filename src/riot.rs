@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use anyhow::{Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     parse_sbd_files,
-    sbd::{Board, Button, Led, SbdFile},
+    sbd::{Board, SbdFile},
     utils::write_all,
 };
 
@@ -39,10 +39,7 @@ pub struct RiotChipMapEntry {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub struct RiotBoardExt {
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub flags: BTreeSet<String>,
-    // #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    // pub global_env: BTreeMap<String, StringOrVecString>,
+    // TODO
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
@@ -86,6 +83,7 @@ struct CFile {
 }
 
 impl CFile {
+    #[expect(dead_code, reason = "currently unused, unmark when it is")]
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -185,7 +183,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     let mut board_h = CFile::new_header();
 
     let mut makefile = String::new();
-    let mut makefile_dep = String::new();
+    let makefile_dep = String::new();
     let mut makefile_features = String::new();
     let mut makefile_include = String::new();
 
@@ -238,7 +236,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
         // get the map key of the peripheral that works for this UART's pins
         let peripheral_key = uart_peripherals
             .iter()
-            .find_map(|(key, peripheral)| {
+            .find_map(|(key, _peripheral)| {
                 // TODO: actually do filter/select by possible pins
                 Some(key)
             })
