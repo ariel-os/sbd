@@ -103,6 +103,7 @@ pub struct Package {
     pub rust_version: Option<StringOrWorkspace>,
 }
 
+#[allow(clippy::unnecessary_wraps, reason = "this is a shortcut")]
 pub fn workspace() -> Option<StringOrWorkspace> {
     Some(StringOrWorkspace::workspace())
 }

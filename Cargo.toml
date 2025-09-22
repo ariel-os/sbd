@@ -17,3 +17,6 @@ serde_yaml = "0.9.34"
 toml = { version = "0.9.5", features = ["preserve_order"] }
 walkdir = "2.5.0"
 yaml-hash = "0.4.5"
+
+[lints.clippy]
+pedantic = "deny"

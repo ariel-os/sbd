@@ -106,7 +106,7 @@ pub enum PinLevel {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Debugger {
     #[serde(rename = "type")]
-    pub _type: String,
+    pub type_: String,
     pub uart: Option<Uart>,
 }
 

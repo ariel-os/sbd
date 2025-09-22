@@ -37,8 +37,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     match args.subcommand {
-        Subcommands::GenerateAriel(args) => ariel::generate(args)?,
-        Subcommands::GenerateRiot(args) => riot::generate(args)?,
+        Subcommands::GenerateAriel(args) => ariel::generate(&args)?,
+        Subcommands::GenerateRiot(args) => riot::generate(&args)?,
     }
     Ok(())
 }
@@ -49,9 +49,13 @@ fn parse_sbd_files(sbd_dir: &str) -> anyhow::Result<SbdFile> {
     let mut files = Vec::new();
     for entry in WalkDir::new(sbd_dir)
         .into_iter()
-        .filter_map(|e| e.ok())
+        .filter_map(std::result::Result::ok)
         .filter(|e| e.file_type().is_file())
-        .filter(|e| e.file_name().to_str().unwrap().ends_with(".yaml"))
+        .filter(|e| {
+            std::path::Path::new(e.file_name().to_str().unwrap())
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("yaml"))
+        })
     {
         files.push(entry.path().to_str().unwrap().to_string());
     }

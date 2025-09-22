@@ -6,6 +6,7 @@
 //
 use std::{
     collections::{BTreeMap, BTreeSet, HashSet},
+    fmt::Write as _,
     str::FromStr,
 };
 
@@ -53,7 +54,7 @@ impl FromStr for Mode {
             "create" => Ok(Mode::Create),
             "overwrite" => Ok(Mode::Overwrite),
             "check" => Ok(Mode::Check),
-            _ => Err(format!("Invalid mode: {}", s)),
+            _ => Err(format!("Invalid mode: {s}")),
         }
     }
 }
@@ -77,7 +78,7 @@ pub struct ArielBoardExt {
     pub swi: Option<String>,
 }
 
-pub fn generate(args: GenerateArielArgs) -> Result<()> {
+pub fn generate(args: &GenerateArielArgs) -> Result<()> {
     let sbd_file = parse_sbd_files(args.sbd_dir.as_str())?;
     let mode = args.mode.unwrap_or_default();
 
@@ -87,18 +88,19 @@ pub fn generate(args: GenerateArielArgs) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn render_ariel_board_crate(sbd: &SbdFile, out: &Utf8Path, mode: Mode) -> Result<()> {
     let mut board_crate = Crate::new("ariel-os-boards");
 
-    let chips: HashSet<String> = HashSet::from_iter(
-        sbd.ariel
-            .clone()
-            .unwrap_or_default()
-            .chips
-            .iter()
-            .flatten()
-            .cloned(),
-    );
+    let chips: HashSet<String> = sbd
+        .ariel
+        .clone()
+        .unwrap_or_default()
+        .chips
+        .iter()
+        .flatten()
+        .cloned()
+        .collect();
 
     if chips.is_empty() {
         println!("warning: No chips defined for Ariel OS");
@@ -237,8 +239,8 @@ fn render_boards_dispatch(boards: &[Board]) -> String {
     s.push_str("cfg_if::cfg_if! {\n   ");
     for board in boards {
         let board_name = &board.name;
-        s.push_str(&format!(" if #[cfg(context = \"{board_name}\")] {{\n"));
-        s.push_str(&format!("        include!(\"{board_name}.rs\");\n"));
+        let _ = writeln!(s, " if #[cfg(context = \"{board_name}\")] {{");
+        let _ = writeln!(s, "        include!(\"{board_name}.rs\");");
         s.push_str("    } else");
     }
     s.push_str(" {\n");
@@ -270,10 +272,11 @@ pub fn render_build_rs(boards: &[Board]) -> String {
     build_rs.push_str("pub fn main() {\n");
 
     for board in boards {
-        build_rs.push_str(&format!(
-            "    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");\n",
+        let _ = writeln!(
+            build_rs,
+            "    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");",
             board.name
-        ))
+        );
     }
 
     build_rs.push_str("}\n");
@@ -295,20 +298,24 @@ fn handle_set_bin_op(set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) 
     let mut code = String::new();
     code.push_str("{\n");
     if let Some(description) = &set_pin_op.description {
-        code.push_str(&format!("    // {}\n", description));
+        let _ = writeln!(code, "    // {description}");
     }
-    code.push_str(&format!(
-        "    let pin = peripherals.{}.take().unwrap();\n",
-        set_pin_op.pin
-    ));
 
-    code.push_str(&format!(
-        "    let output = ariel_os_hal::gpio::Output::new(pin, {});\n",
+    let _ = writeln!(
+        code,
+        "    let pin = peripherals.{}.take().unwrap();",
+        set_pin_op.pin
+    );
+
+    let _ = writeln!(
+        code,
+        "    let output = ariel_os_hal::gpio::Output::new(pin, {});",
         match set_pin_op.level {
             crate::sbd::PinLevel::High => "ariel_os_embassy_common::gpio::Level::High",
             crate::sbd::PinLevel::Low => "ariel_os_embassy_common::gpio::Level::Low",
         }
-    ));
+    );
+
     code.push_str("    core::mem::forget(output);\n");
     code.push_str("}\n");
 
@@ -338,11 +345,11 @@ fn render_pins(board: &Board) -> String {
 fn render_led_pins(board: &str, leds: &[Led]) -> String {
     let mut leds_rs = String::new();
 
-    leds_rs.push_str(&format!("#[cfg(context = \"{board}\")]\n"));
+    let _ = writeln!(leds_rs, "#[cfg(context = \"{board}\")]");
     leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
 
     for led in leds {
-        leds_rs.push_str(&format!("{}: {},\n", led.name, led.pin));
+        let _ = writeln!(leds_rs, "{}: {},", led.name, led.pin);
     }
 
     leds_rs.push_str("});\n");
@@ -353,11 +360,11 @@ fn render_led_pins(board: &str, leds: &[Led]) -> String {
 fn render_button_pins(board: &str, buttons: &[Button]) -> String {
     let mut buttons_rs = String::new();
 
-    buttons_rs.push_str(&format!("#[cfg(context = \"{board}\")]\n"));
+    let _ = writeln!(buttons_rs, "#[cfg(context = \"{board}\")]");
     buttons_rs.push_str("ariel_os_hal::define_peripherals!(ButtonPeripherals {\n");
 
     for button in buttons {
-        buttons_rs.push_str(&format!("{}: {},\n", button.name, button.pin));
+        let _ = writeln!(buttons_rs, "{}: {},", button.name, button.pin);
     }
 
     buttons_rs.push_str("});\n");

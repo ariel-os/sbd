@@ -12,7 +12,7 @@ use regex::Regex;
 /// Parses a GPIO name string into a (port, pin) tuple.
 ///
 /// This function handles several common formats for GPIO names, including:
-/// - P0_01, P1_12, etc.
+/// - `P0_01`, `P1_12`, etc.
 /// - GPIO15, GPIO23, etc.
 ///
 /// # Arguments
