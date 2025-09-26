@@ -29,7 +29,7 @@ pub struct GenerateArielArgs {
     #[argh(positional)]
     sbd_dir: String,
 
-    /// overwrite existing files
+    /// operation mode: create|check|update
     #[argh(option, short = 'm', from_str_fn(parse_mode))]
     mode: Option<Mode>,
 
