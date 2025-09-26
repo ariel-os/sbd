@@ -11,6 +11,6 @@ FileMap {
         "src/nrf52840dk.rs": "// @generated\n\npub mod pins {\nuse ariel_os_hal::hal::peripherals;\n\n#[cfg(context = \"nrf52840dk\")]\nariel_os_hal::define_peripherals!(LedPeripherals {\nled0: P0_13,\nled1: P0_14,\nled2: P0_15,\nled3: P0_16,\n});\n#[cfg(context = \"nrf52840dk\")]\nariel_os_hal::define_peripherals!(ButtonPeripherals {\nbutton0: P0_11,\nbutton1: P0_12,\nbutton2: P0_24,\nbutton3: P0_25,\n});\n}\n\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {\n}\n",
     },
     tagfile: Some(
-        ".sbg-gen",
+        ".sbd-gen",
     ),
 }
