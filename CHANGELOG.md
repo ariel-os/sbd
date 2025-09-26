@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/ariel-os/sbd/compare/v0.1.3...v0.1.4) - 2025-09-26
+
+### Fixed
+
+- uninlined-format-args in anyhow use
+- don't consider tagfile as extra file
+
+### Other
+
+- *(deps)* bump yaml-hash from 0.4.5 to 0.5.0
+- *(deps)* bump camino from 1.1.11 to 1.2.0
+- *(deps)* bump regex from 1.11.2 to 1.11.3
+- *(deps)* bump toml from 0.9.5 to 0.9.7
+
 ## [0.1.3](https://github.com/ariel-os/sbd/compare/v0.1.2...v0.1.3) - 2025-09-26
 
 ### Fixed
