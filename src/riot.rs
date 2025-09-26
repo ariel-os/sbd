@@ -6,9 +6,9 @@ use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    filemap::FileMap,
     parse_sbd_files,
     sbd::{Board, SbdFile},
-    utils::{FileMap, write_all},
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -128,11 +128,7 @@ pub fn generate(args: &GenerateRiotArgs) -> Result<()> {
 
     let boards_dir = render_riot_boards_dir(&sbd_file)?;
 
-    write_all(
-        &args.output,
-        &boards_dir,
-        /*args.mode == Mode::Overwrite*/ true,
-    )?;
+    boards_dir.write_all(&args.output, /*args.mode == Mode::Overwrite*/ true)?;
 
     Ok(())
 }

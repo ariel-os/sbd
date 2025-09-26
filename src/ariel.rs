@@ -15,11 +15,11 @@ use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    filemap::FileMap,
     krate::{Crate, DependencyFull},
     laze::{LazeContext, LazeFile, StringOrVecString},
     parse_sbd_files,
     sbd::{Board, Button, Led, SbdFile},
-    utils::FileMap,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -47,7 +47,7 @@ pub struct GenerateArielArgs {
 pub enum Mode {
     #[default]
     Create,
-    Overwrite,
+    Update,
     Check,
 }
 
@@ -57,7 +57,7 @@ impl FromStr for Mode {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "create" => Ok(Mode::Create),
-            "overwrite" => Ok(Mode::Overwrite),
+            "update" => Ok(Mode::Update),
             "check" => Ok(Mode::Check),
             _ => Err(format!("Invalid mode: {s}")),
         }
@@ -90,7 +90,7 @@ pub fn generate(args: &GenerateArielArgs) -> Result<()> {
     // Render the ariel crate.
     let krate = render_ariel_board_crate(&sbd_file);
 
-    crate::utils::write_all(&args.output, &krate, mode == Mode::Overwrite)?;
+    krate.write_all(&args.output, mode == Mode::Update)?;
 
     Ok(())
 }

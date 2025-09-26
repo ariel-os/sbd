@@ -3,12 +3,12 @@ use walkdir::WalkDir;
 use yaml_hash::YamlHash;
 
 mod ariel;
+mod filemap;
 mod krate;
 mod laze;
 mod pin2tuple;
 mod riot;
 mod sbd;
-mod utils;
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(description = "SDB file parser")]
