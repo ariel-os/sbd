@@ -34,7 +34,7 @@ jobs:
           # GitHub App ID secret name
           app-id: ${{ secrets.RELEASE_PLZ_APP_ID }}
           # GitHub App private key secret name
-          private-key: ${{ secrets.RELEASE_PLZ_APP_PRIVATE_KEY }}
+          private-key: ${{ secrets.RELEASE_PLZ_PRIVATE_KEY }}
       - name: Run release-plz
         uses: release-plz/action@v0.5
         with:
