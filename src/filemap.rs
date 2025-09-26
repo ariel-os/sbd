@@ -170,8 +170,8 @@ impl Mode {
                     for extra_file in res.extra {
                         println!("extra: {extra_file}");
                     }
-                    for differing_file in res.changed {
-                        println!("differing: {differing_file}");
+                    for changed_file in res.changed {
+                        println!("changed: {changed_file}");
                     }
                     return Err(anyhow!(
                         "Directory `{outpath}` is not up-to-date. Try `update` mode."
@@ -179,7 +179,6 @@ impl Mode {
                 }
             }
             Mode::Update => {
-                println!("update");
                 let res = filemap.compare(outpath)?;
                 for file in res.extra {
                     std::fs::remove_file(file)?;
