@@ -337,7 +337,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
 
 fn name2riot_pin(gpio_name: &str) -> Result<String> {
     let (port, pin) = crate::pin2tuple::parse_gpio_name(gpio_name)
-        .ok_or_else(|| anyhow!("error parsing GPIO name: {}", gpio_name))?;
+        .ok_or_else(|| anyhow!("error parsing GPIO name: {gpio_name}"))?;
 
     Ok(format!("GPIO_PIN({port}, {pin})"))
 }
