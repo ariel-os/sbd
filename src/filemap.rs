@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashSet},
     default::Default,
     str::FromStr,
 };
@@ -9,7 +9,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct FileMap {
-    map: HashMap<Utf8PathBuf, String>,
+    map: BTreeMap<Utf8PathBuf, String>,
     tagfile: Option<Utf8PathBuf>,
 }
 

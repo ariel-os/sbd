@@ -74,3 +74,15 @@ fn parse_sbd_files(sbd_dir: &str) -> anyhow::Result<SbdFile> {
 
     Ok(sbd_file)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sbd_ariel() {
+        let sbd_file = parse_sbd_files("sbd-test-files").unwrap();
+        let ariel = ariel::render_ariel_board_crate(&sbd_file);
+        insta::assert_debug_snapshot!(ariel);
+    }
+}

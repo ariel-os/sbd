@@ -24,5 +24,8 @@ toml = { version = "0.9.5", features = ["preserve_order"] }
 walkdir = "2.5.0"
 yaml-hash = "0.4.5"
 
+[dev-dependencies]
+insta = "1.43.2"
+
 [lints.clippy]
 pedantic = "deny"
