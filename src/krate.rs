@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
@@ -32,8 +32,8 @@ impl Crate {
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Manifest {
     pub package: Package,
-    pub dependencies: HashMap<String, Dependency>,
-    pub features: HashMap<String, Vec<String>>,
+    pub dependencies: BTreeMap<String, Dependency>,
+    pub features: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
