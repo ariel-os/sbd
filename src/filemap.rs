@@ -72,7 +72,11 @@ impl FileMap {
                     } else {
                         changed.push(map_file_path.into());
                     }
-                } else {
+                } else if self
+                    .tagfile
+                    .as_ref()
+                    .is_none_or(|tagfile| map_file_path != tagfile)
+                {
                     extra.push(file_path);
                 }
             }
