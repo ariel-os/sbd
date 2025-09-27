@@ -8,7 +8,7 @@ FileMap {
         "build.rs": "// @generated\npub fn main() {\n    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"nrf52840dk\\\"))\");\n}\n",
         "laze.yml": "# yamllint disable-file\n\nbuilders:\n- name: nrf52840dk\n  parent: nrf52840\n  provides:\n  - has_buttons\n  - has_leds\n  - has_usb_device_port\n",
         "src/lib.rs": "// @generated\n\n#![no_std]\n\ncfg_if::cfg_if! {\n    if #[cfg(context = \"nrf52840dk\")] {\n        include!(\"nrf52840dk.rs\");\n    } else {\n        // TODO\n    }\n}\n",
-        "src/nrf52840dk.rs": "// @generated\n\npub mod pins {\nuse ariel_os_hal::hal::peripherals;\n\n#[cfg(context = \"nrf52840dk\")]\nariel_os_hal::define_peripherals!(LedPeripherals {\nled0: P0_13,\nled1: P0_14,\nled2: P0_15,\nled3: P0_16,\n});\n#[cfg(context = \"nrf52840dk\")]\nariel_os_hal::define_peripherals!(ButtonPeripherals {\nbutton0: P0_11,\nbutton1: P0_12,\nbutton2: P0_24,\nbutton3: P0_25,\n});\n}\n\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {\n}\n",
+        "src/nrf52840dk.rs": "// @generated\n\npub mod pins {\nuse ariel_os_hal::hal::peripherals;\n\nariel_os_hal::define_peripherals!(LedPeripherals {\nled0: P0_13,\nled1: P0_14,\nled2: P0_15,\nled3: P0_16,\n});\nariel_os_hal::define_peripherals!(ButtonPeripherals {\nbutton0: P0_11,\nbutton1: P0_12,\nbutton2: P0_24,\nbutton3: P0_25,\n});\n}\n\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {\n}\n",
     },
     tagfile: Some(
         ".sbd-gen",

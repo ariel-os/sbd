@@ -310,10 +310,10 @@ fn render_pins(board: &Board) -> String {
     if board.has_leds() || board.has_buttons() {
         pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
         if let Some(leds) = board.leds.as_ref() {
-            pins.push_str(&render_led_pins(&board.name, leds));
+            pins.push_str(&render_led_pins(leds));
         }
         if let Some(buttons) = board.buttons.as_ref() {
-            pins.push_str(&render_button_pins(&board.name, buttons));
+            pins.push_str(&render_button_pins(buttons));
         }
     }
 
@@ -322,10 +322,9 @@ fn render_pins(board: &Board) -> String {
     pins
 }
 
-fn render_led_pins(board: &str, leds: &[Led]) -> String {
+fn render_led_pins(leds: &[Led]) -> String {
     let mut leds_rs = String::new();
 
-    let _ = writeln!(leds_rs, "#[cfg(context = \"{board}\")]");
     leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
 
     for led in leds {
@@ -337,10 +336,9 @@ fn render_led_pins(board: &str, leds: &[Led]) -> String {
     leds_rs
 }
 
-fn render_button_pins(board: &str, buttons: &[Button]) -> String {
+fn render_button_pins(buttons: &[Button]) -> String {
     let mut buttons_rs = String::new();
 
-    let _ = writeln!(buttons_rs, "#[cfg(context = \"{board}\")]");
     buttons_rs.push_str("ariel_os_hal::define_peripherals!(ButtonPeripherals {\n");
 
     for button in buttons {
