@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/ariel-os/sbd/compare/v0.1.4...v0.1.5) - 2025-09-27
+
+### Fixed
+
+- make pin2tuple regex lazy
+
 ## [0.1.4](https://github.com/ariel-os/sbd/compare/v0.1.3...v0.1.4) - 2025-09-26
 
 ### Fixed
