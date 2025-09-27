@@ -5,9 +5,6 @@
 //! I need a rust regex function that turns gpio names like P0_01, P1_12, GPIO15 into a (port, pin) tuple.
 //! ```
 //!
-//!extern crate regex;
-
-use regex::Regex;
 
 /// Parses a GPIO name string into a (port, pin) tuple.
 ///
@@ -26,7 +23,7 @@ use regex::Regex;
 /// - `None` if the format is not recognized.
 pub fn parse_gpio_name(gpio_name: &str) -> Option<(u8, u8)> {
     // Regex for "P<port>_<pin>" format (e.g., P0_01, P1_12)
-    let p_regex = Regex::new(r"^P(\d+)_(\d+)$").unwrap();
+    let p_regex = lazy_regex::regex!(r"^P(\d+)_(\d+)$");
     if let Some(captures) = p_regex.captures(gpio_name) {
         let port_str = captures.get(1).unwrap().as_str();
         let pin_str = captures.get(2).unwrap().as_str();
@@ -36,7 +33,7 @@ pub fn parse_gpio_name(gpio_name: &str) -> Option<(u8, u8)> {
     }
 
     // Regex for "GPIO<pin>" format (e.g., GPIO15)
-    let gpio_regex = Regex::new(r"^GPIO(\d+)$").unwrap();
+    let gpio_regex = lazy_regex::regex!(r"^GPIO(\d+)$");
     if let Some(captures) = gpio_regex.captures(gpio_name) {
         let pin_str = captures.get(1).unwrap().as_str();
         if let Ok(pin) = pin_str.parse::<u8>() {
