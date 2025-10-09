@@ -11,7 +11,6 @@ use crate::{
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SbdFile {
-    pub description: Option<String>,
     pub include: Option<Vec<String>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub boards: Option<Vec<Board>>,
