@@ -216,16 +216,16 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
 fn render_boards_dispatch(boards: &[Board]) -> String {
     let mut s = String::new();
 
-    s.push_str("cfg_if::cfg_if! {\n   ");
+    s.push_str("cfg_if::cfg_if! {\n");
     for board in boards {
         let board_name = &board.name;
-        let _ = writeln!(s, " if #[cfg(context = \"{board_name}\")] {{");
-        let _ = writeln!(s, "        include!(\"{board_name}.rs\");");
-        s.push_str("    } else");
+        let _ = writeln!(s, "if #[cfg(context = \"{board_name}\")] {{");
+        let _ = writeln!(s, "    include!(\"{board_name}.rs\");");
+        s.push_str("} else");
     }
-    s.push_str(" {\n");
-    s.push_str("        // TODO\n");
-    s.push_str("    }\n");
+    s.push_str("{\n");
+    s.push_str("    /// TODO\n");
+    s.push_str("}\n");
 
     s.push_str("}\n");
 
@@ -254,7 +254,7 @@ pub fn render_build_rs(boards: &[Board]) -> String {
     for board in boards {
         let _ = writeln!(
             build_rs,
-            "    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");",
+            "println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");",
             board.name
         );
     }
@@ -278,18 +278,18 @@ fn handle_set_bin_op(set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) 
     let mut code = String::new();
     code.push_str("{\n");
     if let Some(description) = &set_pin_op.description {
-        let _ = writeln!(code, "    // {description}");
+        let _ = writeln!(code, "/// {description}");
     }
 
     let _ = writeln!(
         code,
-        "    let pin = peripherals.{}.take().unwrap();",
+        "let pin = peripherals.{}.take().unwrap();",
         set_pin_op.pin
     );
 
     let _ = writeln!(
         code,
-        "    let output = ariel_os_hal::gpio::Output::new(pin, {});",
+        "let output = ariel_os_hal::gpio::Output::new(pin, {});",
         match set_pin_op.level {
             crate::sbd::PinLevel::High => "ariel_os_embassy_common::gpio::Level::High",
             crate::sbd::PinLevel::Low => "ariel_os_embassy_common::gpio::Level::Low",

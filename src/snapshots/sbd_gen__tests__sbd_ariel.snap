@@ -7,7 +7,7 @@ FileMap {
         "Cargo.toml": "# @generated\n\n[package]\nname = \"ariel-os-boards\"\n\n[package.edition]\nworkspace = true\n\n[package.license]\nworkspace = true\n\n[package.rust-version]\nworkspace = true\n\n[dependencies.ariel-os-embassy-common]\nworkspace = true\n\n[dependencies.ariel-os-hal]\nworkspace = true\n\n[dependencies.cfg-if]\nworkspace = true\n\n[features]\nno-boards = []\n",
         "build.rs": "// @generated\n\npub fn main() {\n    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"nrf52840dk\\\"))\");\n}\n",
         "laze.yml": "# yamllint disable-file\n\nbuilders:\n- name: nrf52840dk\n  parent: nrf52840\n  provides:\n  - has_buttons\n  - has_leds\n  - has_usb_device_port\n",
-        "src/lib.rs": "// @generated\n\n#![no_std]\ncfg_if::cfg_if! {\n    if #[cfg(context = \"nrf52840dk\")] { include!(\"nrf52840dk.rs\"); } else {}\n}\n",
+        "src/lib.rs": "// @generated\n\n#![no_std]\ncfg_if::cfg_if! {\n    if #[cfg(context = \"nrf52840dk\")] { include!(\"nrf52840dk.rs\"); } else { #[doc =\n    \" TODO\"] }\n}\n",
         "src/nrf52840dk.rs": "// @generated\n\npub mod pins {\n    use ariel_os_hal::hal::peripherals;\n    ariel_os_hal::define_peripherals!(\n        LedPeripherals { led0 : P0_13, led1 : P0_14, led2 : P0_15, led3 : P0_16, }\n    );\n    ariel_os_hal::define_peripherals!(\n        ButtonPeripherals { button0 : P0_11, button1 : P0_12, button2 : P0_24, button3 :\n        P0_25, }\n    );\n}\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {}\n",
     },
     tagfile: Some(
