@@ -20,11 +20,15 @@ impl Crate {
     }
 
     pub fn render(mut self) -> FileMap {
-        let manifest_content = toml::to_string(&self.manifest).unwrap();
+        let manifest_content = format!(
+            "# @generated\n\n{}",
+            toml::to_string(&self.manifest).unwrap()
+        );
 
         self.files
             .insert(Utf8PathBuf::from("Cargo.toml"), manifest_content);
 
+        // prettify Rust files
         self.files.map.iter_mut().for_each(|(path, content)| {
             if path.extension() == Some("rs") {
                 let syntax_tree = syn::parse_file(content).unwrap();
