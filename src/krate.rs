@@ -25,6 +25,16 @@ impl Crate {
         self.files
             .insert(Utf8PathBuf::from("Cargo.toml"), manifest_content);
 
+        self.files.map.iter_mut().for_each(|(path, content)| {
+            if path.extension() == Some("rs") {
+                let syntax_tree = syn::parse_file(content).unwrap();
+                let formatted = prettyplease::unparse(&syntax_tree);
+                content.clear();
+                content.push_str("// @generated\n\n");
+                content.push_str(&formatted);
+            }
+        });
+
         self.files
     }
 }

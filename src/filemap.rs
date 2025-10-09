@@ -9,7 +9,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct FileMap {
-    map: BTreeMap<Utf8PathBuf, String>,
+    pub map: BTreeMap<Utf8PathBuf, String>,
     tagfile: Option<Utf8PathBuf>,
 }
 
