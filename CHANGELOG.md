@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/ariel-os/sbd/compare/v0.1.6...v0.1.7) - 2025-10-09
+
+### Fixed
+
+- *(ariel)* fix cfg-if board dispatch
+- *(gen)* add newline to `.sbd-gen` tag file
+
 ## [0.1.6](https://github.com/ariel-os/sbd/compare/v0.1.5...v0.1.6) - 2025-10-09
 
 ### Added
