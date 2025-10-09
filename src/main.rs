@@ -10,6 +10,8 @@ mod pin2tuple;
 mod riot;
 mod sbd;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(argh::FromArgs, Debug)]
 #[argh(description = "SDB file parser")]
 struct Args {
@@ -17,8 +19,12 @@ struct Args {
     #[argh(option, short = 'C')]
     chdir: Option<String>,
 
+    /// print version and exit
+    #[argh(switch, short = 'V')]
+    version: bool,
+
     #[argh(subcommand)]
-    subcommand: Subcommands,
+    subcommand: Option<Subcommands>,
 }
 
 #[derive(argh::FromArgs, Debug)]
@@ -31,14 +37,22 @@ enum Subcommands {
 fn main() -> anyhow::Result<()> {
     let args: Args = argh::from_env();
 
+    if args.version {
+        println!("sbd version {VERSION}");
+        return Ok(());
+    }
+
     if let Some(dir) = args.chdir.as_ref() {
         println!("sbd: changing to '{dir}'");
         std::env::set_current_dir(dir)?;
     }
 
     match args.subcommand {
-        Subcommands::GenerateAriel(args) => ariel::generate(&args)?,
-        Subcommands::GenerateRiot(args) => riot::generate(&args)?,
+        Some(Subcommands::GenerateAriel(args)) => ariel::generate(&args)?,
+        Some(Subcommands::GenerateRiot(args)) => riot::generate(&args)?,
+        None => {
+            println!("sbd: no subcommand given. try `sbd-gen --help`.");
+        }
     }
     Ok(())
 }
