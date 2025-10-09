@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/ariel-os/sbd/compare/v0.1.5...v0.1.6) - 2025-10-09
+
+### Added
+
+- *(ariel)* add @generated comment to Cargo.toml
+- *(ariel)* format Rust code with prettyplease
+- *(cli)* add `--version`, handle no subcommand
+
+### Other
+
+- *(sbd)* drop file-level `description` field
+- *(ariel)* drop some manual .rs formatting
+- *(deps)* bump serde_with from 3.14.1 to 3.15.0
+- *(deps)* bump serde_with from 3.14.0 to 3.14.1
+- *(deps)* bump camino from 1.2.0 to 1.2.1
+- *(deps)* bump serde from 1.0.227 to 1.0.228
+
 ## [0.1.5](https://github.com/ariel-os/sbd/compare/v0.1.4...v0.1.5) - 2025-09-27
 
 ### Fixed
