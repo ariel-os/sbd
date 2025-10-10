@@ -224,7 +224,7 @@ fn render_boards_dispatch(boards: &[Board]) -> String {
         s.push_str("} else ");
     }
     s.push_str("{\n");
-    s.push_str("    todo!(\"handle unexpected context\");\n");
+    s.push_str("    // TODO: handle unexpected context\n");
     s.push_str("}\n");
 
     s.push_str("}\n");
