@@ -224,7 +224,7 @@ fn render_boards_dispatch(boards: &[Board]) -> String {
         s.push_str("} else ");
     }
     s.push_str("{\n");
-    s.push_str("    /// TODO\n");
+    s.push_str("    todo!(\"handle unexpected context\");\n");
     s.push_str("}\n");
 
     s.push_str("}\n");
@@ -278,7 +278,7 @@ fn handle_set_bin_op(set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) 
     let mut code = String::new();
     code.push_str("{\n");
     if let Some(description) = &set_pin_op.description {
-        let _ = writeln!(code, "/// {description}");
+        let _ = writeln!(code, "// {description}");
     }
 
     let _ = writeln!(
