@@ -1048,9 +1048,9 @@ checksum = "21a0236b59786fed61e2a80582dd500fe61f18b5dca67a4a067d0bc9039339cf"
 
 [[package]]
 name = "yaml-hash"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62caaea5624a84c00a2aa5e268d3257a04b0b68ddf6900a977cbdbf6b58f1d59"
+checksum = "657cd4db1b9eb888399618a5a35bd6724668167173aa26e5872bcf4283fc503f"
 dependencies = [
  "anyhow",
  "yaml-rust2",
@@ -1058,9 +1058,9 @@ dependencies = [
 
 [[package]]
 name = "yaml-rust2"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ce2a4ff45552406d02501cea6c18d8a7e50228e7736a872951fe2fe75c91be7"
+checksum = "2462ea039c445496d8793d052e13787f2b90e750b833afee748e601c17621ed9"
 dependencies = [
  "arraydeque",
  "encoding_rs",
