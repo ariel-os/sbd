@@ -248,7 +248,6 @@ fn render_board_rs(board: &Board) -> String {
 pub fn render_build_rs(boards: &[Board]) -> String {
     let mut build_rs = String::new();
 
-    build_rs.push_str("// @generated\n");
     build_rs.push_str("pub fn main() {\n");
 
     for board in boards {
