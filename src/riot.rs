@@ -227,7 +227,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     for (filename, file_obj) in quirk_file_map {
         if let Some(quirk) = riot_chip.quirks.get(filename) {
             for snip in &quirk.body {
-                file_obj.content_snips.push(snip.to_string());
+                file_obj.content_snips.push(snip.clone());
             }
         }
     }
