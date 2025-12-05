@@ -1054,9 +1054,9 @@ checksum = "21a0236b59786fed61e2a80582dd500fe61f18b5dca67a4a067d0bc9039339cf"
 
 [[package]]
 name = "yaml-hash"
-version = "0.5.1"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "657cd4db1b9eb888399618a5a35bd6724668167173aa26e5872bcf4283fc503f"
+checksum = "49f93cba5f8a53842a7777d71071ae7bc4b7b932a6d030a3091dd8a0bb81927e"
 dependencies = [
  "anyhow",
  "yaml-rust2",
