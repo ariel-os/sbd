@@ -27,7 +27,7 @@ walkdir = "2.5.0"
 yaml-hash = "0.5.1"
 
 [dev-dependencies]
-insta = "1.43.2"
+insta = "1.44.3"
 
 [lints.clippy]
 pedantic = "deny"
