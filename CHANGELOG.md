@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/ariel-os/sbd/compare/v0.1.9...v0.1.10) - 2025-12-05
+
+### Other
+
+- *(deps)* bump yaml-hash from 0.5.1 to 0.6.1
+- *(deps)* bump syn from 2.0.108 to 2.0.110
+- *(deps)* bump insta from 1.43.2 to 1.44.0
+- *(deps)* bump serde_with from 3.15.1 to 3.16.0
+- *(deps)* bump indexmap from 2.11.4 to 2.12.0
+- Acknowledge recent change in output data
+- Generated Rust files: Exempt from rustfmt
+- Accept Clippy fix
+- *(deps)* bump lazy-regex from 3.4.1 to 3.4.2
+- *(deps)* bump yaml-hash from 0.5.0 to 0.5.1
+- *(deps)* bump syn from 2.0.107 to 2.0.108
+- *(deps)* bump serde_with from 3.15.0 to 3.15.1
+- *(deps)* bump syn from 2.0.106 to 2.0.107
+- *(deps)* bump toml from 0.9.7 to 0.9.8
+
 ## [0.1.9](https://github.com/ariel-os/sbd/compare/v0.1.8...v0.1.9) - 2025-10-10
 
 ### Fixed
