@@ -183,6 +183,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
             if board.has_buttons() {
                 board_builder.provides.insert("has_buttons".into());
             }
+            if board.has_host_facing_uart() {
+                board_builder.provides.insert("has_host_facing_uart".into());
+            }
 
             if let Some(swi) = board.ariel.swi {
                 board_builder.provides.insert("has_swi".into());

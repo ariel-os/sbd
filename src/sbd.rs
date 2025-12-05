@@ -63,6 +63,14 @@ impl Board {
             false
         }
     }
+
+    pub fn has_host_facing_uart(&self) -> bool {
+        if let Some(uarts) = &self.uarts {
+            uarts.iter().any(|u| u.host_facing)
+        } else {
+            false
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
