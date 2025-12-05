@@ -21,7 +21,7 @@ prettyplease = "0.2.37"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_with = "3.16.1"
 serde_yaml = "0.9.34"
-syn = { version = "2.0.108", default-features = false, features = ["full", "parsing"] }
+syn = { version = "2.0.111", default-features = false, features = ["full", "parsing"] }
 toml = { version = "0.9.8", features = ["preserve_order"] }
 walkdir = "2.5.0"
 yaml-hash = "0.5.1"
