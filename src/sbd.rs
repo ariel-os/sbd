@@ -126,4 +126,13 @@ pub struct Uart {
     pub tx_pin: String,
     pub cts_pin: Option<String>,
     pub rts_pin: Option<String>,
+
+    /// Set if the board supports using it with a host system (e.g. the build host), and this UART
+    /// would typically face that system.
+    ///
+    /// For example, this is set on boards with built-in programmers on UARTs that are exposed by
+    /// the programmer as USB serial devices. Typical applications querying this are tools that
+    /// reprot debug or measurement data.
+    #[serde(default)]
+    pub host_facing: bool,
 }
