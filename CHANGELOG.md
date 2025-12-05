@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11](https://github.com/ariel-os/sbd/compare/v0.1.10...v0.1.11) - 2025-12-05
+
+### Other
+
+- Generated code: condition
+
 ## [0.1.10](https://github.com/ariel-os/sbd/compare/v0.1.9...v0.1.10) - 2025-12-05
 
 ### Other
