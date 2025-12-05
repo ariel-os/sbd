@@ -19,7 +19,7 @@ indexmap = { version = "2.12.1", features = ["serde"] }
 lazy-regex = "3.4.2"
 prettyplease = "0.2.37"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_with = "3.15.1"
+serde_with = "3.16.1"
 serde_yaml = "0.9.34"
 syn = { version = "2.0.108", default-features = false, features = ["full", "parsing"] }
 toml = { version = "0.9.8", features = ["preserve_order"] }
