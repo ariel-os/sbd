@@ -379,7 +379,7 @@ fn render_uarts(uarts: &[Uart]) -> String {
         }
         // Deferring to a macro so that any actual logic in there is handled in the OS where it
         // belongs; this merely processes the data into a format usable there.
-        writeln!(code, "{{ name: {}, device: {}, tx: {}, rx: {}, host_facing: {} }}", name, device, uart.tx_pin, uart.rx_pin, uart.host_facing).unwrap();
+        writeln!(code, "{{ name: {}, device: {}, tx: {}, rx: {}, host_facing: {} }},", name, device, uart.tx_pin, uart.rx_pin, uart.host_facing).unwrap();
     }
 
     code.push_str("];\n");
