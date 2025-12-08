@@ -134,6 +134,21 @@ pub struct Uart {
     pub tx_pin: String,
     pub cts_pin: Option<String>,
     pub rts_pin: Option<String>,
+    /// Peripheral device names, each of which is fundamentally available to serve this connection
+    /// as the peripheral that takes control of the TX and RX pins.
+    ///
+    /// This item is on the fringe of being a fact about the board, because while it is a fact, it
+    /// is a pure function of the MCU and the assigned pins.
+    ///
+    /// The way this is used in Ariel is also just borderline correct, as Ariel OS's UART devices
+    /// are (at least on platforms such as nRF) composite devices that combine a UART driver with
+    /// several other related peripherals (eg. `UARTE0 => UARTE0 + TIMER4 + PPI_CH14 + PPI_CH15 +
+    /// PPI_GROUP5`), encompassing an instance of MCU specific information that is encoded in the
+    /// Ariel OS source code. The way these names are used there is correct under the (currently
+    /// valid) assumption that the composite items are named after the main UART driver they
+    /// include. (Also, currently, Ariel OS picks the first of them, while generally this is not an
+    /// ordered structure).
+    pub possible_peripherals: Option<Vec<String>>,
 
     /// Set if the board supports using it with a host system (e.g. the build host), and this UART
     /// would typically face that system.
