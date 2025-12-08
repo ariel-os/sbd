@@ -367,7 +367,7 @@ fn render_uarts(uarts: &[Uart]) -> String {
     code.push_str("ariel_os_hal::define_uarts![\n");
 
     for (uart_number, uart) in uarts.iter().enumerate() {
-        let name = uart.name.as_ref().map(std::borrow::Cow::from).unwrap_or_else(|| format!("_unnamed_uart_{uart_number}").into());
+        let name = uart.name.as_ref().map_or_else(|| format!("_unnamed_uart_{uart_number}").into(), std::borrow::Cow::from);
         let Some(device) = uart.possible_peripherals.as_ref().and_then(|v| v.first()) else {
             eprintln!("warning: No peripheral defined for UART, making it unusable in Ariel output.");
             eprintln!("Affected UART: {uart:?}");
