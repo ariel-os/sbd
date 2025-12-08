@@ -89,6 +89,16 @@ impl Target {
         }
     }
 
+    /// Returns true if there are any UARTs listed for this board.
+    #[must_use]
+    pub fn has_uarts(&self) -> bool {
+        if let Some(uarts) = &self.uarts {
+            !uarts.is_empty()
+        } else {
+            false
+        }
+    }
+
     /// Returns true if there are any UARTs listed for this board that have the
     /// [`Uart::host_facing`] property.
     #[must_use]

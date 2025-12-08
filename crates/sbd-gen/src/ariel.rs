@@ -17,7 +17,7 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
+    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, Uart, common::StringOrVecString,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -294,13 +294,16 @@ fn render_pins(target: &Target) -> String {
 
     pins.push_str("pub mod pins {\n");
 
-    if target.has_leds() || target.has_buttons() {
+    if target.has_leds() || target.has_buttons() || target.has_uarts() {
         pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
         if let Some(leds) = target.leds.as_ref() {
             pins.push_str(&render_led_pins(leds));
         }
         if let Some(buttons) = target.buttons.as_ref() {
             pins.push_str(&render_button_pins(buttons));
+        }
+        if let Some(uarts) = target.uarts.as_ref() {
+            pins.push_str(&render_uarts(uarts));
         }
     }
 
@@ -335,4 +338,46 @@ fn render_button_pins(buttons: &[Button]) -> String {
     buttons_rs.push_str("});\n");
 
     buttons_rs
+}
+
+fn render_uarts(uarts: &[Uart]) -> String {
+    let mut code = String::new();
+
+    code.push_str("ariel_os_hal::define_uarts![\n");
+
+    for (uart_number, uart) in uarts.iter().enumerate() {
+        let name = uart.name.as_ref().map_or_else(
+            || format!("_unnamed_uart_{uart_number}").into(),
+            std::borrow::Cow::from,
+        );
+        let Some(device) = uart.possible_peripherals.as_ref().and_then(|v| v.first()) else {
+            eprintln!(
+                "warning: No peripheral defined for UART, making it unusable in Ariel output."
+            );
+            eprintln!("Affected UART: {uart:?}");
+            continue;
+        };
+        if uart
+            .possible_peripherals
+            .as_ref()
+            .is_some_and(|v| v.len() > 1)
+        {
+            eprintln!(
+                "warning: Multiple hardware devices are available, but Ariel OS does not process any but the first."
+            );
+            eprintln!("Affected UART: {uart:?}");
+        }
+        // Deferring to a macro so that any actual logic in there is handled in the OS where it
+        // belongs; this merely processes the data into a format usable there.
+        writeln!(
+            code,
+            "{{ name: {}, device: {}, tx: {}, rx: {}, host_facing: {} }},",
+            name, device, uart.tx_pin, uart.rx_pin, uart.host_facing
+        )
+        .unwrap();
+    }
+
+    code.push_str("];\n");
+
+    code
 }
