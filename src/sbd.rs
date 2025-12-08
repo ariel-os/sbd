@@ -64,6 +64,14 @@ impl Board {
         }
     }
 
+    pub fn has_uarts(&self) -> bool {
+        if let Some(uarts) = &self.uarts {
+            !uarts.is_empty()
+        } else {
+            false
+        }
+    }
+
     pub fn has_host_facing_uart(&self) -> bool {
         if let Some(uarts) = &self.uarts {
             uarts.iter().any(|u| u.host_facing)
