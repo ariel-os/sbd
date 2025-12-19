@@ -22,7 +22,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_with = "3.16.1"
 serde_yaml = "0.9.34"
 syn = { version = "2.0.111", default-features = false, features = ["full", "parsing"] }
-toml = { version = "0.9.9", features = ["preserve_order"] }
+toml = { version = "0.9.10", features = ["preserve_order"] }
 walkdir = "2.5.0"
 yaml-hash = "0.6.1"
 
