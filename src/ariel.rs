@@ -248,6 +248,12 @@ fn render_board_rs(board: &Board) -> String {
 pub fn render_build_rs(boards: &[Board]) -> String {
     let mut build_rs = String::new();
 
+    // Not done in the krate.rs prettifier because this does not work on files that are later
+    // inlined.
+    //
+    // Conditional until <https://github.com/rust-lang/rust/issues/54726> is resolved.
+    build_rs.push_str("#![cfg_attr(rustfmt, rustfmt::skip)]\n\n");
+
     build_rs.push_str("pub fn main() {\n");
 
     for board in boards {
