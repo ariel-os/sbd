@@ -15,7 +15,7 @@ include = ["src/**/*", "LICENSE-*", "README.md"]
 anyhow = "1.0.100"
 argh = "0.1.13"
 camino = "1.2.2"
-indexmap = { version = "2.12.1", features = ["serde"] }
+indexmap = { version = "2.13.0", features = ["serde"] }
 lazy-regex = "3.5.1"
 prettyplease = "0.2.37"
 serde = { version = "1.0.228", features = ["derive"] }
