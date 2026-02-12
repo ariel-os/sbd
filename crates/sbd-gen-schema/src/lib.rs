@@ -1,3 +1,7 @@
+mod ariel;
+pub mod common;
+mod riot;
+
 use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
@@ -5,6 +9,7 @@ use serde_with::{KeyValueMap, serde_as};
 
 use crate::{
     ariel::{Ariel, ArielBoardExt},
+    common::StringOrVecString,
     riot::{Riot, RiotBoardExt},
 };
 

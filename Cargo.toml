@@ -1,7 +1,11 @@
-[package]
-name = "sbd-gen"
-description = "A generator for turning SBD (Structured Board Descriptions) into BSPs."
-version = "0.1.11"
+[workspace]
+resolver = "3"
+members = [
+    "crates/sbd-gen",
+    "crates/sbd-gen-schema",
+]
+
+[workspace.package]
 edition = "2024"
 
 license = "MIT OR Apache-2.0"
@@ -9,9 +13,7 @@ repository = "https://github.com/ariel-os/sbd"
 homepage = "https://github.com/ariel-os/sbd"
 readme = "README.md"
 
-include = ["src/**/*", "LICENSE-*", "README.md"]
-
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.101"
 argh = "0.1.14"
 camino = "1.2.2"
@@ -26,8 +28,5 @@ toml = { version = "0.9.12", features = ["preserve_order"] }
 walkdir = "2.5.0"
 yaml-hash = "0.6.1"
 
-[dev-dependencies]
-insta = "1.46.3"
-
-[lints.clippy]
+[workspace.lints.clippy]
 pedantic = "deny"

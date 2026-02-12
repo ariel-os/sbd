@@ -4,21 +4,20 @@
 // - functions rendering a whole file are named render_<file_name>_<ext>, e.g., `render_board_rs`
 // - functions rendering a part of a file are named render_<somename>, e.g., `render_board_rs_init_body`
 //
-use std::{
-    collections::{BTreeMap, BTreeSet, HashSet},
-    fmt::Write as _,
-};
+use std::{collections::HashSet, fmt::Write as _};
 
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use serde::{Deserialize, Serialize};
 
 use crate::{
     filemap::{FileMap, Mode, parse_mode},
     krate::{Crate, DependencyFull},
-    laze::{LazeContext, LazeFile, StringOrVecString},
+    laze::{LazeContext, LazeFile},
     parse_sbd_files,
-    sbd::{Board, Button, Led, SbdFile},
+};
+
+use sbd_gen_schema::{
+    Board, Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, common::StringOrVecString,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -40,21 +39,6 @@ pub struct GenerateArielArgs {
         default = "Utf8PathBuf::from(\"ariel-os-boards\")"
     )]
     output: Utf8PathBuf,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct Ariel {
-    pub chips: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct ArielBoardExt {
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub flags: BTreeSet<String>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub global_env: BTreeMap<String, StringOrVecString>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub swi: Option<String>,
 }
 
 pub fn generate(args: &GenerateArielArgs) -> Result<()> {
@@ -266,14 +250,14 @@ pub fn render_build_rs(boards: &[Board]) -> String {
 fn handle_quirks(board: &Board, init_body: &mut String) {
     for quirk in &board.quirks {
         match quirk {
-            crate::sbd::Quirk::SetPin(set_pin_op) => {
+            Quirk::SetPin(set_pin_op) => {
                 handle_set_bin_op(set_pin_op, init_body);
             }
         }
     }
 }
 
-fn handle_set_bin_op(set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) {
+fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
     let mut code = String::new();
     code.push_str("{\n");
     if let Some(description) = &set_pin_op.description {
@@ -290,8 +274,8 @@ fn handle_set_bin_op(set_pin_op: &crate::sbd::SetPinOp, init_body: &mut String) 
         code,
         "let output = ariel_os_hal::gpio::Output::new(pin, {});",
         match set_pin_op.level {
-            crate::sbd::PinLevel::High => "ariel_os_embassy_common::gpio::Level::High",
-            crate::sbd::PinLevel::Low => "ariel_os_embassy_common::gpio::Level::Low",
+            PinLevel::High => "ariel_os_embassy_common::gpio::Level::High",
+            PinLevel::Low => "ariel_os_embassy_common::gpio::Level::Low",
         }
     );
 

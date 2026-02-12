@@ -8,6 +8,8 @@ use std::{
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use sbd_gen_schema::common::StringOrVecString;
+
 #[skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct LazeFile {
@@ -52,27 +54,6 @@ impl LazeContext {
         Self {
             name: name.to_string(),
             ..Default::default()
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
-#[serde(untagged)]
-pub enum StringOrVecString {
-    String(String),
-    VecString(Vec<String>),
-}
-
-impl StringOrVecString {
-    pub fn push(&mut self, s: String) {
-        match self {
-            StringOrVecString::String(s1) => {
-                let v = vec![s1.clone(), s];
-                *self = StringOrVecString::VecString(v);
-            }
-            StringOrVecString::VecString(v) => {
-                v.push(s);
-            }
         }
     }
 }
