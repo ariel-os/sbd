@@ -51,6 +51,7 @@ pub struct Board {
 }
 
 impl Board {
+    #[must_use]
     pub fn has_leds(&self) -> bool {
         if let Some(leds) = &self.leds {
             !leds.is_empty()
@@ -59,6 +60,7 @@ impl Board {
         }
     }
 
+    #[must_use]
     pub fn has_buttons(&self) -> bool {
         if let Some(buttons) = &self.buttons {
             !buttons.is_empty()
