@@ -576,6 +576,7 @@ dependencies = [
  "insta",
  "lazy-regex",
  "prettyplease",
+ "sbd-gen-schema",
  "serde",
  "serde_with",
  "serde_yaml",
@@ -583,6 +584,14 @@ dependencies = [
  "toml",
  "walkdir",
  "yaml-hash",
+]
+
+[[package]]
+name = "sbd-gen-schema"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_with",
 ]
 
 [[package]]

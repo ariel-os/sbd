@@ -1,4 +1,4 @@
-use sbd::SbdFile;
+use sbd_gen_schema::SbdFile;
 use walkdir::WalkDir;
 use yaml_hash::YamlHash;
 
@@ -8,7 +8,6 @@ mod krate;
 mod laze;
 mod pin2tuple;
 mod riot;
-mod sbd;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

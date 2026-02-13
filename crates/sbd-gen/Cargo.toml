@@ -1,0 +1,30 @@
+[package]
+name = "sbd-gen"
+version = "0.1.11"
+description = "A generator for turning SBD (Structured Board Descriptions) into BSPs."
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+include = ["src/**/*", "LICENSE-*", "README.md"]
+
+[dependencies]
+anyhow = { workspace = true }
+argh = { workspace = true }
+camino = { workspace = true }
+indexmap = { workspace = true }
+lazy-regex = { workspace = true }
+prettyplease = { workspace = true }
+sbd-gen-schema = { path = "../sbd-gen-schema" }
+serde = { workspace = true }
+serde_with = { workspace = true }
+serde_yaml = { workspace = true }
+syn = { workspace = true }
+toml = { workspace = true }
+walkdir = { workspace = true }
+yaml-hash = { workspace = true }
+
+[dev-dependencies]
+insta = "1.46.3"
+
+[lints]
+workspace = true

@@ -1,16 +1,13 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::Write as _;
 
 use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
-use serde::{Deserialize, Serialize};
 
 use crate::filemap::{Mode, parse_mode};
-use crate::{
-    filemap::FileMap,
-    parse_sbd_files,
-    sbd::{Board, SbdFile},
-};
+use crate::{filemap::FileMap, parse_sbd_files};
+
+use sbd_gen_schema::{Board, SbdFile};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-riot")]
@@ -27,44 +24,6 @@ pub struct GenerateRiotArgs {
     /// riot os external boards output dir
     #[argh(option, short = 'o', default = "Utf8PathBuf::from(\"riot-os-boards\")")]
     output: Utf8PathBuf,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct Riot {
-    pub chips: BTreeMap<String, RiotChipMapEntry>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotChipMapEntry {
-    cpu: String,
-    cpu_model: String,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    quirks: BTreeMap<String, RiotQirkEntry>,
-    peripherals: Option<RiotChipPeripherals>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotBoardExt {
-    // TODO
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotQirkEntry {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub body: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotChipPeripherals {
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    uarts: BTreeMap<String, RiotChipUartPeripheral>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotChipUartPeripheral {
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    config: BTreeMap<String, String>,
-    isr: Option<String>,
 }
 
 struct RiotBoard {
