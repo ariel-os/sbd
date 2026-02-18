@@ -7,7 +7,7 @@ use camino::Utf8PathBuf;
 use crate::filemap::{Mode, parse_mode};
 use crate::{filemap::FileMap, parse_sbd_files};
 
-use sbd_gen_schema::{Board, SbdFile};
+use sbd_gen_schema::{SbdFile, Target};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-riot")]
@@ -26,11 +26,11 @@ pub struct GenerateRiotArgs {
     output: Utf8PathBuf,
 }
 
-struct RiotBoard {
+struct RiotTarget {
     pub name: String,
     pub files: FileMap,
 }
-impl RiotBoard {
+impl RiotTarget {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.into(),
@@ -112,18 +112,18 @@ pub fn render_riot_boards_dir(sbd: &SbdFile) -> Result<FileMap> {
         println!("warning: No supported chips defined for RIOT OS");
     }
 
-    // filter boards with unknown chips
-    let boards = sbd
-        .boards
+    // filter targets with unknown chips
+    let targets = sbd
+        .targets
         .iter()
         .flatten()
-        .filter(|board| {
-            if chips.contains(&board.chip) {
+        .filter(|target| {
+            if chips.contains(&target.chip) {
                 true
             } else {
                 println!(
-                    "warning: skipping board {}, unknown chip {}",
-                    board.name, board.chip
+                    "warning: skipping target {}, unknown chip {}",
+                    target.name, target.chip
                 );
                 false
             }
@@ -131,27 +131,27 @@ pub fn render_riot_boards_dir(sbd: &SbdFile) -> Result<FileMap> {
         .cloned()
         .collect::<Vec<_>>();
 
-    if boards.is_empty() {
-        println!("warning: No boards defined for Riot OS");
+    if targets.is_empty() {
+        println!("warning: No targets defined for Riot OS");
     }
 
-    let mut riot_boards = Vec::new();
+    let mut riot_targets = Vec::new();
 
-    for board in boards {
-        riot_boards.push(generate_riot_board(sbd, &board)?);
+    for target in targets {
+        riot_targets.push(generate_riot_target(sbd, &target)?);
     }
 
     let mut riot_boards_dir = FileMap::new();
-    for board in riot_boards {
-        riot_boards_dir.extend_subdir(&Utf8PathBuf::from(board.name), board.files);
+    for target in riot_targets {
+        riot_boards_dir.extend_subdir(&Utf8PathBuf::from(target.name), target.files);
     }
 
     Ok(riot_boards_dir)
 }
 
 #[allow(clippy::too_many_lines)]
-fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
-    let mut riot_board = RiotBoard::new(&board.name);
+fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
+    let mut riot_target = RiotTarget::new(&target.name);
 
     let mut periph_conf_h = CFile::new_header();
     let mut board_h = CFile::new_header();
@@ -173,7 +173,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     makefile.push_str("MODULE = board");
 
     // both unwraps should always succeed (filtered in caller)
-    let riot_chip = sbd.riot.as_ref().unwrap().chips.get(&board.chip).unwrap();
+    let riot_chip = sbd.riot.as_ref().unwrap().chips.get(&target.chip).unwrap();
     let _ = writeln!(makefile_features, "CPU = {}", riot_chip.cpu);
     let _ = writeln!(makefile_features, "CPU_MODEL = {}", riot_chip.cpu_model);
 
@@ -194,7 +194,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
     let mut uarts = Vec::new();
 
     // Debugger
-    if let Some(debugger) = &board.debugger {
+    if let Some(debugger) = &target.debugger {
         let _ = writeln!(makefile_include, "PROGRAMMER ?= {}", debugger.type_);
         if let Some(uart) = &debugger.uart {
             uarts.push(uart);
@@ -203,7 +203,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
 
     // UARTs
     //let mut uart_isrs = Vec::new();
-    uarts.extend(board.uarts.iter().flatten());
+    uarts.extend(target.uarts.iter().flatten());
     let mut uart_peripherals = riot_chip.peripherals.as_ref().unwrap().uarts.clone();
     let mut uarts_configured = Vec::new();
     for uart in uarts {
@@ -230,7 +230,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
         } else {
             println!(
                 "warning: {}: no peripheral found for UART {}",
-                board.name,
+                target.name,
                 uart.name.as_ref().map_or_else(|| "unnamed", |s| s)
             );
         }
@@ -276,22 +276,24 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
 
     makefile.push_str("\ninclude $(RIOTBASE)/Makefile.base\n");
 
-    riot_board
+    riot_target
         .files
         .insert("include/periph_conf.h".into(), periph_conf_h.render());
-    riot_board
+    riot_target
         .files
         .insert("include/board.h".into(), board_h.render());
-    riot_board.files.insert("Makefile".into(), makefile);
-    riot_board.files.insert("Makefile.dep".into(), makefile_dep);
-    riot_board
+    riot_target.files.insert("Makefile".into(), makefile);
+    riot_target
+        .files
+        .insert("Makefile.dep".into(), makefile_dep);
+    riot_target
         .files
         .insert("Makefile.features".into(), makefile_features);
-    riot_board
+    riot_target
         .files
         .insert("Makefile.include".into(), makefile_include);
 
-    Ok(riot_board)
+    Ok(riot_target)
 }
 
 fn name2riot_pin(gpio_name: &str) -> Result<String> {

@@ -17,7 +17,7 @@ pub struct RiotChipMapEntry {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotBoardExt {
+pub struct RiotTargetExt {
     // TODO
 }
 

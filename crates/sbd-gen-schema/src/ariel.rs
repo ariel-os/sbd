@@ -10,7 +10,7 @@ pub struct Ariel {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct ArielBoardExt {
+pub struct ArielTargetExt {
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub flags: BTreeSet<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
