@@ -231,7 +231,7 @@ fn generate_riot_board(sbd: &SbdFile, board: &Board) -> Result<RiotBoard> {
             println!(
                 "warning: {}: no peripheral found for UART {}",
                 board.name,
-                uart.name.as_ref().map_or_else(|| "unnamed", |s| s)
+                uart.name.as_deref().unwrap_or_else(|| "unnamed")
             );
         }
     }
