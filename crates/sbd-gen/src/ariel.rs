@@ -381,3 +381,35 @@ fn render_uarts(uarts: &[Uart]) -> String {
 
     code
 }
+
+#[test]
+fn test_render_uarts() {
+    let rendered = render_uarts(&[
+        Uart {
+            name: Some("CON0".to_string()),
+            rx_pin: "PA08".to_owned(),
+            tx_pin: "PC99".to_owned(),
+            cts_pin: None,
+            rts_pin: None,
+            possible_peripherals: Some(vec!["UART2".to_owned(), "LEUART0".to_owned()]),
+            host_facing: false,
+        },
+        Uart {
+            name: Some("VCOM".to_string()),
+            rx_pin: "P0_04".to_owned(),
+            tx_pin: "P1_23".to_owned(),
+            cts_pin: Some("P7.89".to_owned()),
+            rts_pin: Some("D5".to_owned()),
+            possible_peripherals: Some(vec!["UART1".to_owned(), "LEUART0".to_owned()]),
+            host_facing: true,
+        },
+    ]);
+    assert_eq!(
+        rendered,
+        "ariel_os_hal::define_uarts![
+{ name: CON0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
+{ name: VCOM, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
+];
+"
+    );
+}
