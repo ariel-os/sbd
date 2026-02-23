@@ -1,5 +1,5 @@
 description: test sbd file
-boards:
+targets:
   nrf52840dk:
     chip: nrf52840
     flags:

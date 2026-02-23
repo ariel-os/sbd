@@ -1,8 +1,8 @@
 //! Ariel OS board support crate generation
 
 // Conventions:
-// - functions rendering a whole file are named render_<file_name>_<ext>, e.g., `render_board_rs`
-// - functions rendering a part of a file are named render_<somename>, e.g., `render_board_rs_init_body`
+// - functions rendering a whole file are named render_<file_name>_<ext>, e.g., `render_target_rs`
+// - functions rendering a part of a file are named render_<somename>, e.g., `render_target_rs_init_body`
 //
 use std::{collections::HashSet, fmt::Write as _};
 
@@ -17,7 +17,7 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Board, Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, common::StringOrVecString,
+    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -71,18 +71,18 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
         println!("warning: No chips defined for Ariel OS");
     }
 
-    // filter boards with unknown chips
-    let boards = sbd
-        .boards
+    // filter targets with unknown chips
+    let targets = sbd
+        .targets
         .iter()
         .flatten()
-        .filter(|board| {
-            if chips.contains(&board.chip) {
+        .filter(|target| {
+            if chips.contains(&target.chip) {
                 true
             } else {
                 println!(
-                    "warning: skipping board {}, unknown chip {}",
-                    board.name, board.chip
+                    "warning: skipping target {}, unknown chip {}",
+                    target.name, target.chip
                 );
                 false
             }
@@ -90,8 +90,8 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
         .cloned()
         .collect::<Vec<_>>();
 
-    if boards.is_empty() {
-        println!("warning: No boards defined for Ariel OS");
+    if targets.is_empty() {
+        println!("warning: No targets defined for Ariel OS");
     }
 
     // crate
@@ -134,19 +134,19 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
 
         board_crate
             .files
-            .insert("build.rs".into(), render_build_rs(&boards));
+            .insert("build.rs".into(), render_build_rs(&targets));
 
-        for board in &boards {
-            let board_rs = render_board_rs(board);
+        for target in &targets {
+            let target_rs = render_target_rs(target);
             board_crate
                 .files
-                .insert(format!("src/{}.rs", board.name).into(), board_rs);
+                .insert(format!("src/{}.rs", target.name).into(), target_rs);
         }
 
         let mut lib_rs = String::new();
         lib_rs.push_str("// @generated\n\n#![no_std]\n\n");
 
-        lib_rs.push_str(&render_boards_dispatch(&boards));
+        lib_rs.push_str(&render_targets_dispatch(&targets));
 
         board_crate.files.insert("src/lib.rs".into(), lib_rs);
     }
@@ -155,25 +155,25 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
     {
         let mut laze_file = LazeFile::new();
         let mut laze_builders = Vec::new();
-        for board in boards {
-            let mut board_builder = LazeContext::new(&board.name);
-            board_builder.parent = Some(board.chip.clone());
-            board_builder.provides.extend(board.flags.clone());
-            board_builder.provides.extend(board.ariel.flags.clone());
+        for target in targets {
+            let mut target_builder = LazeContext::new(&target.name);
+            target_builder.parent = Some(target.chip.clone());
+            target_builder.provides.extend(target.flags.clone());
+            target_builder.provides.extend(target.ariel.flags.clone());
 
-            if board.has_leds() {
-                board_builder.provides.insert("has_leds".into());
+            if target.has_leds() {
+                target_builder.provides.insert("has_leds".into());
             }
-            if board.has_buttons() {
-                board_builder.provides.insert("has_buttons".into());
+            if target.has_buttons() {
+                target_builder.provides.insert("has_buttons".into());
             }
 
-            if let Some(swi) = board.ariel.swi {
-                board_builder.provides.insert("has_swi".into());
+            if let Some(swi) = target.ariel.swi {
+                target_builder.provides.insert("has_swi".into());
 
                 let config_swi = format!("CONFIG_SWI={swi}");
 
-                board_builder
+                target_builder
                     .env
                     .entry("CARGO_ENV".into())
                     .or_insert_with(|| StringOrVecString::VecString(Vec::new()))
@@ -181,9 +181,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
             }
 
             // copy over Ariel's global environment
-            board_builder.env.extend(board.ariel.global_env.clone());
+            target_builder.env.extend(target.ariel.global_env.clone());
 
-            laze_builders.push(board_builder);
+            laze_builders.push(target_builder);
         }
         laze_file.builders = Some(laze_builders);
 
@@ -197,14 +197,14 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
     board_crate.render()
 }
 
-fn render_boards_dispatch(boards: &[Board]) -> String {
+fn render_targets_dispatch(targets: &[Target]) -> String {
     let mut s = String::new();
 
     s.push_str("cfg_if::cfg_if! {\n");
-    for board in boards {
-        let board_name = &board.name;
-        let _ = writeln!(s, "if #[cfg(context = \"{board_name}\")] {{");
-        let _ = writeln!(s, "    include!(\"{board_name}.rs\");");
+    for target in targets {
+        let target_name = &target.name;
+        let _ = writeln!(s, "if #[cfg(context = \"{target_name}\")] {{");
+        let _ = writeln!(s, "    include!(\"{target_name}.rs\");");
         s.push_str("} else ");
     }
     s.push_str("{\n");
@@ -216,30 +216,30 @@ fn render_boards_dispatch(boards: &[Board]) -> String {
     s
 }
 
-fn render_board_rs(board: &Board) -> String {
-    let pins = render_pins(board);
+fn render_target_rs(target: &Target) -> String {
+    let pins = render_pins(target);
 
     let mut init_body = String::new();
-    handle_quirks(board, &mut init_body);
+    handle_quirks(target, &mut init_body);
 
-    let board_rs = format!(
+    let target_rs = format!(
         "// @generated\n\n{pins}\n#[allow(unused_variables)]\npub fn init(peripherals: &mut ariel_os_hal::hal::OptionalPeripherals) {{\n{init_body}}}\n"
     );
 
-    board_rs
+    target_rs
 }
 
-pub fn render_build_rs(boards: &[Board]) -> String {
+pub fn render_build_rs(targets: &[Target]) -> String {
     let mut build_rs = String::new();
 
     build_rs.push_str("// @generated\n");
     build_rs.push_str("pub fn main() {\n");
 
-    for board in boards {
+    for target in targets {
         let _ = writeln!(
             build_rs,
             "println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"{}\\\"))\");",
-            board.name
+            target.name
         );
     }
 
@@ -248,8 +248,8 @@ pub fn render_build_rs(boards: &[Board]) -> String {
     build_rs
 }
 
-fn handle_quirks(board: &Board, init_body: &mut String) {
-    for quirk in &board.quirks {
+fn handle_quirks(target: &Target, init_body: &mut String) {
+    for quirk in &target.quirks {
         match quirk {
             Quirk::SetPin(set_pin_op) => {
                 handle_set_bin_op(set_pin_op, init_body);
@@ -286,17 +286,17 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
     init_body.push_str(&code);
 }
 
-fn render_pins(board: &Board) -> String {
+fn render_pins(target: &Target) -> String {
     let mut pins = String::new();
 
     pins.push_str("pub mod pins {\n");
 
-    if board.has_leds() || board.has_buttons() {
+    if target.has_leds() || target.has_buttons() {
         pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
-        if let Some(leds) = board.leds.as_ref() {
+        if let Some(leds) = target.leds.as_ref() {
             pins.push_str(&render_led_pins(leds));
         }
-        if let Some(buttons) = board.buttons.as_ref() {
+        if let Some(buttons) = target.buttons.as_ref() {
             pins.push_str(&render_button_pins(buttons));
         }
     }
