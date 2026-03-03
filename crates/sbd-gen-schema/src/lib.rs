@@ -78,6 +78,8 @@ impl Board {
         }
     }
 
+    /// Returns true if there are any UARTs listed for this board that have the
+    /// [`Uart::host_facing`] property.
     #[must_use]
     pub fn has_host_facing_uart(&self) -> bool {
         if let Some(uarts) = &self.uarts {
