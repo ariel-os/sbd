@@ -173,6 +173,9 @@ pub struct Uart {
     /// pick the first one that has not previously been taken, and ideally, a static choice would
     /// be made at build time solving the satisfiability problem.
     ///
+    /// When no peripheral is given, or all are used for other purposes, the OS may fall back to
+    /// bit-banging operation; currently, they do not.
+    ///
     /// [hard problem]: https://en.wikipedia.org/wiki/Boolean_satisfiability_problem
     #[serde(default)]
     pub possible_peripherals: Vec<String>,
