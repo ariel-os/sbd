@@ -388,7 +388,7 @@ fn test_render_uarts() {
             tx_pin: "PC99".to_owned(),
             cts_pin: None,
             rts_pin: None,
-            possible_peripherals: Some(vec!["UART2".to_owned(), "LEUART0".to_owned()]),
+            possible_peripherals: vec!["UART2".to_owned(), "LEUART0".to_owned()],
             host_facing: false,
         },
         Uart {
@@ -397,7 +397,7 @@ fn test_render_uarts() {
             tx_pin: "P1_23".to_owned(),
             cts_pin: Some("P7.89".to_owned()),
             rts_pin: Some("D5".to_owned()),
-            possible_peripherals: Some(vec!["UART1".to_owned(), "LEUART0".to_owned()]),
+            possible_peripherals: vec!["UART1".to_owned(), "LEUART0".to_owned()],
             host_facing: true,
         },
     ]);
