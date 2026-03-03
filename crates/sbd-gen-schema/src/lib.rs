@@ -154,7 +154,7 @@ pub struct Uart {
     /// implemented. For example, on EFM32, a pin combination might be configurable either using
     /// `LEUART0` or `USART1`, in which case those are given as values.
     ///
-    /// On some OSes and platforms (e. g., at the time of writing, in ArielOS on nRF devices),
+    /// On some OSes and platforms (e. g., at the time of writing, in Ariel OS on nRF devices),
     /// using that device name might entail using companion peripherals that are statically
     /// selected (e. g. `UARTE0` being bundled with `TIMER4`, `PPI_CH14`, `PPI_CH15` and
     /// `PPI_GROUP5`). This is an implementation detail of the OS; the name in this list is still
