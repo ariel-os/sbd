@@ -69,6 +69,7 @@ impl Board {
         }
     }
 
+    /// Returns true if there are any UARTs listed for this board.
     #[must_use]
     pub fn has_uarts(&self) -> bool {
         if let Some(uarts) = &self.uarts {
