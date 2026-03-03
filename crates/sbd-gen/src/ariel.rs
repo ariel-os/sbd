@@ -350,17 +350,14 @@ fn render_uarts(uarts: &[Uart]) -> String {
             || format!("_unnamed_uart_{uart_number}").into(),
             std::borrow::Cow::from,
         );
-        let Some(device) = uart.possible_peripherals.as_ref().and_then(|v| v.first()) else {
+        let Some(device) = uart.possible_peripherals.first() else {
             eprintln!(
                 "warning: No peripheral defined for UART, making it unusable in Ariel output."
             );
             eprintln!("Affected UART: {uart:?}");
             continue;
         };
-        if uart
-            .possible_peripherals
-            .as_ref()
-            .is_some_and(|v| v.len() > 1)
+        if uart.possible_peripherals.len() > 1
         {
             eprintln!(
                 "warning: Multiple hardware devices are available, but Ariel OS does not process any but the first."

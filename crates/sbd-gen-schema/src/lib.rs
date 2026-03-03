@@ -172,7 +172,7 @@ pub struct Uart {
     ///
     /// [hard problem]: https://en.wikipedia.org/wiki/Boolean_satisfiability_problem
     #[serde(default)]
-    pub possible_peripherals: Option<Vec<String>>,
+    pub possible_peripherals: Vec<String>,
 
     /// Set if the board supports using it with a host system (e.g. the build host), and this UART
     /// would typically face that system.
