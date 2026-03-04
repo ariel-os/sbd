@@ -1,4 +1,5 @@
-use sbd_gen_schema::SbdFile;
+use anyhow::{Context as _, bail};
+use sbd_gen_schema::{SbdFile, SbdFileVersion};
 use walkdir::WalkDir;
 use yaml_hash::YamlHash;
 
@@ -37,7 +38,10 @@ fn main() -> anyhow::Result<()> {
     let args: Args = argh::from_env();
 
     if args.version {
-        println!("sbd version {VERSION}");
+        println!(
+            "sbd-gen version {VERSION} (schema version {})",
+            sbd_gen_schema::schema_version()
+        );
         return Ok(());
     }
 
@@ -78,7 +82,21 @@ fn parse_sbd_files(sbd_dir: &str) -> anyhow::Result<SbdFile> {
     let mut hash = YamlHash::new();
     for file in files {
         println!("sbd: processing '{file}'");
-        hash = hash.merge_file(&file)?;
+        let yaml = std::fs::read_to_string(&file)?;
+
+        // version check
+        let version: SbdFileVersion =
+            serde_yaml::from_str(&yaml).with_context(|| format!("parsing file {file}"))?;
+
+        if !version.is_compatible() {
+            bail!(
+                "file {file} has version {}, which is not compatible with the used schema version {}",
+                version.version,
+                sbd_gen_schema::schema_version()
+            );
+        }
+
+        hash = hash.merge_str(&yaml)?;
     }
 
     // Now do magic: serialize again, then deserialize into our known type.
