@@ -4,6 +4,7 @@ pub mod riot;
 
 use std::collections::BTreeSet;
 
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use serde_with::{KeyValueMap, serde_as};
 
@@ -13,10 +14,26 @@ use crate::{
     riot::{Riot, RiotBoardExt},
 };
 
+const fn default_version() -> Version {
+    semver::Version::new(0, 1, 0)
+}
+
+/// Returns the used schema version.
+#[must_use]
+pub fn schema_version() -> Version {
+    #[expect(
+        clippy::missing_panics_doc,
+        reason = "this is expected to be correct at compile time"
+    )]
+    Version::parse(env!("CARGO_PKG_VERSION")).unwrap()
+}
+
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SbdFile {
+    #[serde(default = "default_version")]
+    pub version: Version,
     pub include: Option<Vec<String>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub boards: Option<Vec<Board>>,
@@ -147,4 +164,24 @@ pub struct Uart {
     pub tx_pin: String,
     pub cts_pin: Option<String>,
     pub rts_pin: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct SbdFileVersion {
+    #[serde(default = "default_version")]
+    pub version: Version,
+}
+
+impl SbdFileVersion {
+    /// Returns whether this version is compatible with this schema version.
+    #[must_use]
+    pub fn is_compatible(&self) -> bool {
+        #[expect(
+            clippy::missing_panics_doc,
+            reason = "any valid version is also a valid version requirement"
+        )]
+        let req = VersionReq::parse(&self.version.to_string()).unwrap();
+
+        req.matches(&schema_version())
+    }
 }
