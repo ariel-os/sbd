@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.1.9...sbd-gen-v0.1.12) - 2026-03-10
+
+### Added
+
+- initial schema versioning
+- *(schema)* update button and led `aliases` and `active`
+- provide better package metadata
+
+### Other
+
+- *(sbd)* bump version
+- release
+- *(schema)* bump to `0.2.0`
+- fix clippy lints
+- create cargo workspace and move schema in separate crate
+
 ## [0.1.11](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.1.9...sbd-gen-v0.1.11) - 2026-03-10
 
 ### Added
