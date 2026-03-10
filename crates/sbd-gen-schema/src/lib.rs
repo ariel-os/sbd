@@ -15,7 +15,7 @@ use crate::{
 };
 
 const fn default_version() -> Version {
-    semver::Version::new(0, 1, 0)
+    semver::Version::new(0, 2, 0)
 }
 
 /// Returns the used schema version.
