@@ -12,7 +12,7 @@ pub struct RiotChipMapEntry {
     pub cpu: String,
     pub cpu_model: String,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub quirks: BTreeMap<String, RiotQirkEntry>,
+    pub quirks: BTreeMap<String, RiotQuirkEntry>,
     pub peripherals: Option<RiotChipPeripherals>,
 }
 
@@ -22,7 +22,7 @@ pub struct RiotBoardExt {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub struct RiotQirkEntry {
+pub struct RiotQuirkEntry {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub body: Vec<String>,
 }
