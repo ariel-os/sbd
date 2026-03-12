@@ -561,7 +561,7 @@ dependencies = [
 
 [[package]]
 name = "sbd-gen"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "argh",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "sbd-gen-schema"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "semver",
  "serde",
