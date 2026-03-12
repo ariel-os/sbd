@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.2.0...sbd-gen-v0.2.1) - 2026-03-12
+
+### Other
+
+- updated the following local packages: sbd-gen-schema
+
 ## [0.2.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.1.12...sbd-gen-v0.2.0) - 2026-03-11
 
 ### Other
