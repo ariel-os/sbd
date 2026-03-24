@@ -17,7 +17,7 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
+    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, SpiBus, Target, common::StringOrVecString,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -167,6 +167,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
             if target.has_buttons() {
                 target_builder.provides.insert("has_buttons".into());
             }
+            if target.has_spi() {
+                target_builder.provides.insert("has_spi".into());
+            }
 
             if let Some(swi) = target.ariel.swi {
                 target_builder.provides.insert("has_swi".into());
@@ -291,13 +294,16 @@ fn render_pins(target: &Target) -> String {
 
     pins.push_str("pub mod pins {\n");
 
-    if target.has_leds() || target.has_buttons() {
+    if target.has_leds() || target.has_buttons() || target.has_spi() {
         pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
         if let Some(leds) = target.leds.as_ref() {
             pins.push_str(&render_led_pins(leds));
         }
         if let Some(buttons) = target.buttons.as_ref() {
             pins.push_str(&render_button_pins(buttons));
+        }
+        if let Some(spi) = target.spi.as_ref() {
+            pins.push_str(&render_spi_pins(spi));
         }
     }
 
@@ -332,4 +338,21 @@ fn render_button_pins(buttons: &[Button]) -> String {
     buttons_rs.push_str("});\n");
 
     buttons_rs
+}
+
+fn render_spi_pins(spi: &SpiBus) -> String {
+    let mut spi_rs = String::new();
+
+    spi_rs.push_str("ariel_os_hal::define_peripherals!(SpiPeripherals {\n");
+    let _ = writeln!(spi_rs, "miso: {},", spi.miso);
+    let _ = writeln!(spi_rs, "mosi: {},", spi.mosi);
+    let _ = writeln!(spi_rs, "sck: {},", spi.sck);
+    if let Some(devices) = &spi.devices {
+        for device in devices {
+            let _ = writeln!(spi_rs, "{}_cs: {},", device.name, device.cs);
+        }
+    }
+    spi_rs.push_str("});\n");
+
+    spi_rs
 }

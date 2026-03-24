@@ -267,6 +267,63 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
         features.insert("periph_uart".into());
     }
 
+    // SPIs
+    if let Some(spi_bus) = &target.spi {
+        let mut spi_peripherals = riot_chip
+            .peripherals
+            .as_ref()
+            .map(|p| p.spis.clone())
+            .unwrap_or_default();
+
+        #[expect(clippy::unnecessary_find_map)]
+        let peripheral_key = spi_peripherals
+            .iter()
+            .find_map(|(key, _peripheral)| Some(key))
+            .map(std::string::ToString::to_string);
+
+        if let Some(key) = peripheral_key {
+            let spi_peripheral = spi_peripherals.remove(&key).unwrap();
+            let mut spi_cfg = spi_peripheral.config.clone();
+            spi_cfg.insert("miso_pin".into(), name2riot_pin(&spi_bus.miso)?);
+            spi_cfg.insert("mosi_pin".into(), name2riot_pin(&spi_bus.mosi)?);
+            spi_cfg.insert("sck_pin".into(), name2riot_pin(&spi_bus.sck)?);
+
+            let mut s = String::new();
+            s.push('\n');
+
+            s.push_str("static const spi_conf_t spi_config[] = {\n");
+            s.push_str("    {\n");
+            for (k, v) in &spi_cfg {
+                let _ = writeln!(s, "        .{k} = {v},");
+            }
+            s.push_str("    },\n");
+            s.push_str("};\n\n");
+
+            if let Some(devices) = &spi_bus.devices {
+                for device in devices {
+                    let cs_pin = name2riot_pin(&device.cs)?;
+                    let device_upper = device.name.to_uppercase();
+                    let _ = writeln!(s, "#define SPI_CS_{device_upper}  ({cs_pin})");
+                }
+                s.push('\n');
+            }
+
+            if let Some(isr) = spi_peripheral.isr {
+                let _ = writeln!(s, "#define SPI_0_ISR            ({isr})");
+            }
+
+            s.push_str("#define SPI_NUMOF           ARRAY_SIZE(spi_config)\n\n");
+
+            periph_conf_h.content_snips.push(s);
+            features.insert("periph_spi".into());
+        } else {
+            println!(
+                "warning: {}: no SPI peripheral found for chip {}",
+                target.name, target.chip
+            );
+        }
+    }
+
     // finishing
     if !features.is_empty() {
         for feature in features {

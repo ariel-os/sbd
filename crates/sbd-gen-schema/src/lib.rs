@@ -68,6 +68,7 @@ pub struct Target {
     pub buttons: Option<Vec<Button>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub uarts: Option<Vec<Uart>>,
+    pub spi: Option<SpiBus>,
 }
 
 impl Target {
@@ -87,6 +88,11 @@ impl Target {
         } else {
             false
         }
+    }
+
+    #[must_use]
+    pub fn has_spi(&self) -> bool {
+        self.spi.is_some()
     }
 }
 
@@ -164,6 +170,25 @@ pub struct Uart {
     pub tx_pin: String,
     pub cts_pin: Option<String>,
     pub rts_pin: Option<String>,
+}
+
+#[serde_as]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiBus {
+    pub miso: String,
+    pub mosi: String,
+    pub sck: String,
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub devices: Option<Vec<SpiDevice>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiDevice {
+    #[serde(rename = "$key$")]
+    pub name: String,
+    pub cs: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
