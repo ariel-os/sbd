@@ -88,6 +88,27 @@ impl Target {
             false
         }
     }
+
+    /// Returns true if there are any UARTs listed for this board.
+    #[must_use]
+    pub fn has_uarts(&self) -> bool {
+        if let Some(uarts) = &self.uarts {
+            !uarts.is_empty()
+        } else {
+            false
+        }
+    }
+
+    /// Returns true if there are any UARTs listed for this board that have the
+    /// [`Uart::host_facing`] property.
+    #[must_use]
+    pub fn has_host_facing_uart(&self) -> bool {
+        if let Some(uarts) = &self.uarts {
+            uarts.iter().any(|u| u.host_facing)
+        } else {
+            false
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -164,6 +185,49 @@ pub struct Uart {
     pub tx_pin: String,
     pub cts_pin: Option<String>,
     pub rts_pin: Option<String>,
+    /// Peripheral device names, any of which is fundamentally available to serve this connection
+    /// as the peripheral that takes control of the TX and RX pins.
+    ///
+    /// # Usage
+    ///
+    /// All items in the list are peripheral names of the MCU for which the UART interface is
+    /// implemented. For example, on EFM32, a pin combination might be configurable either using
+    /// `LEUART0` or `USART1`, in which case those are given as values.
+    ///
+    /// On some OSes and platforms (e. g., at the time of writing, in Ariel OS on nRF devices),
+    /// using that device name might entail using companion peripherals that are statically
+    /// selected (e. g. `UARTE0` being bundled with `TIMER4`, `PPI_CH14`, `PPI_CH15` and
+    /// `PPI_GROUP5`). This is an implementation detail of the OS; the name in this list is still
+    /// only the name of the one peripheral that performs the UART functionality.
+    ///
+    /// # Future development
+    ///
+    /// When future versions of `sbd` or the OSes consuming this file learn to process per-MCU
+    /// information, this field might go away. Instead, the possible peripherals might be deduced
+    /// purely from the MCU's peripheral mapping and the `*_pin` values.
+    ///
+    /// When multiple UARTs are in use in an application and their possible peripherals overlap,
+    /// deciding which of the choices to take is a [hard problem]. When none of the peripherals are
+    /// available, the OS's mechanism of choosing a peripheral may need enhancing: For example,
+    /// Ariel OS (at the time of writing) only selects the first peripheral. Future versions might
+    /// pick the first one that has not previously been taken, and ideally, a static choice would
+    /// be made at build time solving the satisfiability problem.
+    ///
+    /// When no peripheral is given, or all are used for other purposes, the OS may fall back to
+    /// bit-banging operation; currently, they do not.
+    ///
+    /// [hard problem]: https://en.wikipedia.org/wiki/Boolean_satisfiability_problem
+    #[serde(default)]
+    pub possible_peripherals: Vec<String>,
+
+    /// Set if the board supports using it with a host system (e.g. the build host), and this UART
+    /// would typically face that system.
+    ///
+    /// For example, this is set on boards with built-in programmers on UARTs that are exposed by
+    /// the programmer as USB serial devices. Typical applications querying this are tools that
+    /// report debug or measurement data.
+    #[serde(default)]
+    pub host_facing: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
