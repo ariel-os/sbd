@@ -203,10 +203,10 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
 
     // UARTs
     //let mut uart_isrs = Vec::new();
-    uarts.extend(target.uarts.iter().flatten());
+    uarts.extend(target.uarts.iter());
     let mut uart_peripherals = riot_chip.peripherals.as_ref().unwrap().uarts.clone();
     let mut uarts_configured = Vec::new();
-    for uart in uarts {
+    for (n, uart) in uarts.iter().enumerate() {
         // get the map key of the peripheral that works for this UART's pins
         #[expect(clippy::unnecessary_find_map)]
         let peripheral_key = uart_peripherals
@@ -228,11 +228,7 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
 
             uarts_configured.push((uart_cfg, uart_peripheral.isr));
         } else {
-            println!(
-                "warning: {}: no peripheral found for UART {}",
-                target.name,
-                uart.name.as_deref().unwrap_or("unnamed")
-            );
+            println!("warning: {}: no peripheral found for UART{n}", target.name);
         }
     }
 

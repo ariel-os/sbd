@@ -67,8 +67,8 @@ pub struct Target {
     pub leds: Vec<Led>,
     #[serde(default)]
     pub buttons: Vec<Button>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub uarts: Option<Vec<Uart>>,
+    #[serde(default)]
+    pub uarts: Vec<Uart>,
 }
 
 impl Target {
@@ -86,22 +86,14 @@ impl Target {
     /// Returns true if there are any UARTs listed for this board.
     #[must_use]
     pub fn has_uarts(&self) -> bool {
-        if let Some(uarts) = &self.uarts {
-            !uarts.is_empty()
-        } else {
-            false
-        }
+        !self.uarts.is_empty()
     }
 
     /// Returns true if there are any UARTs listed for this board that have the
     /// [`Uart::host_facing`] property.
     #[must_use]
     pub fn has_host_facing_uart(&self) -> bool {
-        if let Some(uarts) = &self.uarts {
-            uarts.iter().any(|u| u.host_facing)
-        } else {
-            false
-        }
+        self.uarts.iter().any(|u| u.host_facing)
     }
 
     pub fn test_default() -> Self {
@@ -117,7 +109,7 @@ impl Target {
             leds: vec![],
             quirks: vec![],
             riot: RiotTargetExt::default(),
-            uarts: None,
+            uarts: vec![],
         }
     }
 }
@@ -186,8 +178,8 @@ pub struct Debugger {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Uart {
-    #[serde(rename = "$key$")]
-    pub name: Option<String>,
+    #[serde(default)]
+    pub aliases: Vec<String>,
     pub rx_pin: String,
     pub tx_pin: String,
     pub cts_pin: Option<String>,
