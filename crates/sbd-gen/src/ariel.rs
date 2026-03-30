@@ -6,7 +6,7 @@
 //
 use std::{collections::HashSet, fmt::Write as _};
 
-use anyhow::Result;
+use anyhow::{Context as _, Result, anyhow};
 use camino::Utf8PathBuf;
 
 use crate::{
@@ -138,7 +138,8 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             .insert("build.rs".into(), render_build_rs(&targets));
 
         for target in &targets {
-            let target_rs = render_target_rs(target)?;
+            let target_rs = render_target_rs(target)
+                .with_context(|| anyhow!("cannot render {}", target.name))?;
             board_crate
                 .files
                 .insert(format!("src/{}.rs", target.name).into(), target_rs);
