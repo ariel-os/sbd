@@ -245,7 +245,7 @@ impl<'a> RenderTarget<'a> {
             if target.has_buttons() {
                 pins.push_str(&self.render_button_pins()?);
             }
-            if target.uarts.is_some() {
+            if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
             }
         }
@@ -290,17 +290,13 @@ impl<'a> RenderTarget<'a> {
     }
 
     fn render_uarts(&mut self) -> Result<String> {
-        let uarts = self.target.uarts.as_ref().unwrap();
+        let uarts = &self.target.uarts;
         let mut code = String::new();
 
         code.push_str("ariel_os_hal::define_uarts![\n");
 
-        for (uart_number, uart) in uarts.iter().enumerate() {
-            let name = uart.name.as_ref().map_or_else(
-                || format!("_unnamed_uart_{uart_number}").into(),
-                std::borrow::Cow::from,
-            );
-
+        for (n, uart) in uarts.iter().enumerate() {
+            let name = format!("uart{n}");
             {
                 // claim this UART's resources
                 // TODO: "by" could be more specific ("claimed by uart FOO as rx_pin" vs "claimed
@@ -428,14 +424,14 @@ pub fn test_default_target() -> Target {
     Target {
         name: "test-target".to_string(),
         ariel: sbd_gen_schema::ariel::ArielTargetExt::default(),
-        buttons: None,
+        buttons: vec![],
         chip: "test-chip".to_string(),
         debugger: None,
         description: None,
-        leds: None,
+        leds: vec![],
         flags: std::collections::BTreeSet::default(),
         include: None,
-        uarts: None,
+        uarts: vec![],
         quirks: vec![],
         riot: sbd_gen_schema::riot::RiotTargetExt::default(),
     }
@@ -444,9 +440,9 @@ pub fn test_default_target() -> Target {
 #[test]
 fn test_render_uarts() {
     use sbd_gen_schema::Uart;
-    let uarts = Some(vec![
+    let uarts = vec![
         Uart {
-            name: Some("CON0".to_string()),
+            aliases: vec!["CON0".to_string()],
             rx_pin: "PA08".to_owned(),
             tx_pin: "PC99".to_owned(),
             cts_pin: None,
@@ -455,7 +451,7 @@ fn test_render_uarts() {
             host_facing: false,
         },
         Uart {
-            name: Some("VCOM".to_string()),
+            aliases: vec!["VCOM".to_string()],
             rx_pin: "P0_04".to_owned(),
             tx_pin: "P1_23".to_owned(),
             cts_pin: Some("P7.89".to_owned()),
@@ -463,7 +459,7 @@ fn test_render_uarts() {
             possible_peripherals: vec!["UART1".to_owned(), "LEUART0".to_owned()],
             host_facing: true,
         },
-    ]);
+    ];
 
     let target = Target {
         uarts,
@@ -476,8 +472,8 @@ fn test_render_uarts() {
     assert_eq!(
         rendered,
         "ariel_os_hal::define_uarts![
-{ name: CON0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
-{ name: VCOM, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
+{ name: uart0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
+{ name: uart1, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
 ];
 "
     );
