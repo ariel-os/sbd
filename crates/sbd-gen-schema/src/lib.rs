@@ -19,13 +19,14 @@ const fn default_version() -> Version {
 }
 
 /// Returns the used schema version.
+///
+/// - If the new schema adds new functionality but doesn't break old schema files: only a non-SemVer-breaking bump is required
+/// - Otherwise, this needs a SemVer-breaking bump.
+///
+/// In both cases, the schema version must be updated accordingly.
 #[must_use]
-pub fn schema_version() -> Version {
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "this is expected to be correct at compile time"
-    )]
-    Version::parse(env!("CARGO_PKG_VERSION")).unwrap()
+pub const fn schema_version() -> Version {
+    semver::Version::new(0, 3, 1)
 }
 
 #[serde_as]
