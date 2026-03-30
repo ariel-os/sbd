@@ -63,10 +63,10 @@ pub struct Target {
     pub debugger: Option<Debugger>,
 
     // peripheral types
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub leds: Option<Vec<Led>>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub buttons: Option<Vec<Button>>,
+    #[serde(default)]
+    pub leds: Vec<Led>,
+    #[serde(default)]
+    pub buttons: Vec<Button>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub uarts: Option<Vec<Uart>>,
 }
@@ -74,20 +74,13 @@ pub struct Target {
 impl Target {
     #[must_use]
     pub fn has_leds(&self) -> bool {
-        if let Some(leds) = &self.leds {
-            !leds.is_empty()
-        } else {
-            false
-        }
+        !self.leds.is_empty()
     }
 
     #[must_use]
+
     pub fn has_buttons(&self) -> bool {
-        if let Some(buttons) = &self.buttons {
-            !buttons.is_empty()
-        } else {
-            false
-        }
+        !self.buttons.is_empty()
     }
 
     /// Returns true if there are any UARTs listed for this board.
@@ -110,13 +103,28 @@ impl Target {
             false
         }
     }
+
+    pub fn test_default() -> Self {
+        Self {
+            name: "test-target".to_string(),
+            ariel: ArielTargetExt::default(),
+            buttons: vec![],
+            chip: "test-chip".to_string(),
+            debugger: None,
+            description: None,
+            flags: BTreeSet::default(),
+            include: None,
+            leds: vec![],
+            quirks: vec![],
+            riot: RiotTargetExt::default(),
+            uarts: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Led {
-    #[serde(rename = "$key$")]
-    pub name: String,
     pub pin: String,
     pub color: Option<String>,
     pub active: Option<PinActive>,
@@ -127,8 +135,6 @@ pub struct Led {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Button {
-    #[serde(rename = "$key$")]
-    pub name: String,
     pub pin: String,
     pub active: Option<PinActive>,
     #[serde(default)]

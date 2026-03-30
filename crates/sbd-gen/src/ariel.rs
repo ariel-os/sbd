@@ -17,9 +17,7 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{
-    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
-};
+use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -242,11 +240,11 @@ impl<'a> RenderTarget<'a> {
 
         if target.has_leds() || target.has_buttons() || target.has_uarts() {
             pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
-            if let Some(leds) = target.leds.as_ref() {
-                pins.push_str(&self.render_led_pins(leds)?);
+            if target.has_leds() {
+                pins.push_str(&self.render_led_pins()?);
             }
-            if let Some(buttons) = target.buttons.as_ref() {
-                pins.push_str(&self.render_button_pins(buttons)?);
+            if target.has_buttons() {
+                pins.push_str(&self.render_button_pins()?);
             }
             if target.uarts.is_some() {
                 pins.push_str(&self.render_uarts()?);
@@ -258,14 +256,16 @@ impl<'a> RenderTarget<'a> {
         Ok(pins)
     }
 
-    fn render_led_pins(&mut self, leds: &'a [Led]) -> Result<String> {
+    fn render_led_pins(&mut self) -> Result<String> {
+        let leds = &self.target.leds;
         let mut leds_rs = String::new();
 
         leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
 
-        for led in leds {
-            self.resources.claim(&led.pin, &led.name)?;
-            let _ = writeln!(leds_rs, "{}: {},", led.name, led.pin);
+        for (n, led) in leds.iter().enumerate() {
+            let name = format!("led{n}");
+            self.resources.claim(&led.pin, &name)?;
+            let _ = writeln!(leds_rs, "{}: {},", name, led.pin);
         }
 
         leds_rs.push_str("});\n");
@@ -273,14 +273,16 @@ impl<'a> RenderTarget<'a> {
         Ok(leds_rs)
     }
 
-    fn render_button_pins(&mut self, buttons: &'a [Button]) -> Result<String> {
+    fn render_button_pins(&mut self) -> Result<String> {
+        let buttons = &self.target.buttons;
         let mut buttons_rs = String::new();
 
         buttons_rs.push_str("ariel_os_hal::define_peripherals!(ButtonPeripherals {\n");
 
-        for button in buttons {
-            self.resources.claim(&button.pin, &button.name)?;
-            let _ = writeln!(buttons_rs, "{}: {},", button.name, button.pin);
+        for (n, button) in buttons.iter().enumerate() {
+            let name = format!("button{n}");
+            self.resources.claim(&button.pin, &name)?;
+            let _ = writeln!(buttons_rs, "{}: {},", name, button.pin);
         }
 
         buttons_rs.push_str("});\n");
