@@ -10,7 +10,7 @@ repository.workspace = true
 include = ["src/**/*", "LICENSE-*"]
 
 [dependencies]
-semver = { version = "1.0.27", features = ["serde"] }
+semver = { version = "1.0.28", features = ["serde"] }
 serde = { workspace = true }
 serde_with = { workspace = true }
 
