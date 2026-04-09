@@ -68,6 +68,8 @@ pub struct Target {
     #[serde(default)]
     pub buttons: Vec<Button>,
     #[serde(default)]
+    pub i2c: Vec<I2cBus>,
+    #[serde(default)]
     pub uarts: Vec<Uart>,
 }
 
@@ -80,6 +82,12 @@ impl Target {
     #[must_use]
     pub fn has_buttons(&self) -> bool {
         !self.buttons.is_empty()
+    }
+
+    /// Returns true if there are any I2C buses listed for this board.
+    #[must_use]
+    pub fn has_i2c_bus(&self) -> bool {
+        !self.i2c.is_empty()
     }
 
     /// Returns true if there are any UARTs listed for this board.
@@ -155,6 +163,33 @@ pub struct Debugger {
     #[serde(rename = "type")]
     pub type_: String,
     pub uart: Option<Uart>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct I2cBus {
+    pub scl_pin: String,
+    pub sda_pin: String,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    #[serde(default)]
+    pub devices: Vec<I2cDevice>,
+    #[serde(default)]
+    pub possible_peripherals: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct I2cDevice {
+    /// Device type.
+    ///
+    /// This is supposed to be an *identifier*.
+    /// In the Ariel OS generator, this will set the flag `has_i2c_device_<type>`.
+    #[serde(rename = "type")]
+    type_: String,
+
+    /// Device address on bus in hex.
+    address: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -167,6 +167,10 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             if target.has_buttons() {
                 target_builder.provides.insert("has_buttons".into());
             }
+            if target.has_i2c_bus() {
+                target_builder.provides.insert("has_i2c".into());
+                // TODO: add device flags
+            }
             if target.has_host_facing_uart() {
                 target_builder
                     .provides
@@ -244,6 +248,9 @@ impl<'a> RenderTarget<'a> {
             }
             if target.has_buttons() {
                 pins.push_str(&self.render_button_pins()?);
+            }
+            if target.has_i2c_bus() {
+                pins.push_str(&self.render_i2c_buses()?);
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
@@ -344,6 +351,17 @@ impl<'a> RenderTarget<'a> {
         }
 
         code.push_str("];\n");
+
+        Ok(code)
+    }
+
+    fn render_i2c_buses(&self) -> Result<String> {
+        let i2c_buses = &self.target.i2c;
+        let mut code = String::new();
+        // TODO
+
+        // code.push_str("ariel_os_hal::define_i2c_bus![\n");
+        // code.push_str("]\n");
 
         Ok(code)
     }
