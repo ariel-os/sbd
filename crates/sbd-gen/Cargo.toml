@@ -1,6 +1,6 @@
 [package]
 name = "sbd-gen"
-version = "0.3.0"
+version = "0.3.1"
 description = "A generator for turning SBD (Structured Board Descriptions) into BSPs."
 categories = ["command-line-utilities", "embedded", "hardware-support"]
 keywords = ["ariel", "board", "bsp", "riot"]
@@ -16,7 +16,7 @@ camino = { workspace = true }
 indexmap = { workspace = true }
 lazy-regex = { workspace = true }
 prettyplease = { workspace = true }
-sbd-gen-schema = { path = "../sbd-gen-schema", version = "0.3.0" }
+sbd-gen-schema = { path = "../sbd-gen-schema", version = "0.4.0" }
 serde = { workspace = true }
 serde_with = { workspace = true }
 serde_yaml = { workspace = true }

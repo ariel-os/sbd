@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.3.0...sbd-gen-v0.3.1) - 2026-04-08
+
+### Other
+
+- *(deps)* bump insta from 1.47.1 to 1.47.2
+- *(deps)* bump insta from 1.47.0 to 1.47.1
+- *(deps)* bump insta from 1.46.3 to 1.47.0
+- *(uart)* equate absent and empty .possible_peripherals
+- Test code generation
+- Generate code for UARTs
+- Expose presence of host facing UARTs as `has_host_facing_uart`
+- address clippy lint
+
 ## [0.3.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.2.0...sbd-gen-v0.3.0) - 2026-03-20
 
 ### Other
