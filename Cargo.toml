@@ -15,7 +15,7 @@ repository = "https://github.com/ariel-os/sbd"
 anyhow = "1.0.102"
 argh = "0.1.19"
 camino = "1.2.2"
-indexmap = { version = "2.13.1", features = ["serde"] }
+indexmap = { version = "2.14.0", features = ["serde"] }
 lazy-regex = "3.6.0"
 prettyplease = "0.2.37"
 serde = { version = "1.0.228", features = ["derive"] }
