@@ -302,8 +302,8 @@ fn render_pins(target: &Target) -> String {
         if let Some(buttons) = target.buttons.as_ref() {
             pins.push_str(&render_button_pins(buttons));
         }
-        if let Some(spi) = target.spi.as_ref() {
-            pins.push_str(&render_spi_pins(spi));
+        if let Some(spis) = target.spi.as_ref() {
+            pins.push_str(&render_spi_pins(spis));
         }
     }
 
@@ -340,19 +340,34 @@ fn render_button_pins(buttons: &[Button]) -> String {
     buttons_rs
 }
 
-fn render_spi_pins(spi: &SpiBus) -> String {
+fn render_spi_pins(spis: &[SpiBus]) -> String {
     let mut spi_rs = String::new();
 
-    spi_rs.push_str("ariel_os_hal::define_peripherals!(SpiPeripherals {\n");
-    let _ = writeln!(spi_rs, "miso: {},", spi.miso);
-    let _ = writeln!(spi_rs, "mosi: {},", spi.mosi);
-    let _ = writeln!(spi_rs, "sck: {},", spi.sck);
-    if let Some(devices) = &spi.devices {
-        for device in devices {
-            let _ = writeln!(spi_rs, "{}_cs: {},", device.name, device.cs);
+    for spi in spis {
+        let struct_name = spi.name.as_deref().map_or_else(
+            || String::from("SpiPeripherals"),
+            |n| {
+                let mut chars = n.chars();
+                match chars.next() {
+                    None => String::from("SpiPeripherals"),
+                    Some(first) => {
+                        first.to_uppercase().collect::<String>() + chars.as_str() + "Peripherals"
+                    }
+                }
+            },
+        );
+
+        let _ = writeln!(spi_rs, "ariel_os_hal::define_peripherals!({struct_name} {{");
+        let _ = writeln!(spi_rs, "miso: {},", spi.miso);
+        let _ = writeln!(spi_rs, "mosi: {},", spi.mosi);
+        let _ = writeln!(spi_rs, "sck: {},", spi.sck);
+        if let Some(devices) = &spi.devices {
+            for device in devices {
+                let _ = writeln!(spi_rs, "{}_cs: {},", device.name, device.cs);
+            }
         }
+        spi_rs.push_str("});\n");
     }
-    spi_rs.push_str("});\n");
 
     spi_rs
 }
