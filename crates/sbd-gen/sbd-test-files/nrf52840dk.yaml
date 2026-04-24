@@ -1,3 +1,4 @@
+version: 0.3.0
 description: test sbd file
 targets:
   nrf52840dk:

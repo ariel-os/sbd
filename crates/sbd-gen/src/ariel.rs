@@ -17,7 +17,16 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, SpiBus, Target, common::StringOrVecString,
+    Button,
+    Led,
+    PinLevel,
+    Quirk,
+    SbdFile,
+    SetPinOp,
+    SpiBus,
+    Target,
+    Uart,
+    common::StringOrVecString,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -170,6 +179,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> FileMap {
             if target.has_spi() {
                 target_builder.provides.insert("has_spi".into());
             }
+            if target.has_host_facing_uart() {
+                target_builder.provides.insert("has_host_facing_uart".into());
+            }
 
             if let Some(swi) = target.ariel.swi {
                 target_builder.provides.insert("has_swi".into());
@@ -294,7 +306,10 @@ fn render_pins(target: &Target) -> String {
 
     pins.push_str("pub mod pins {\n");
 
-    if target.has_leds() || target.has_buttons() || target.has_spi() {
+    if target.has_leds()
+	|| target.has_buttons()
+	|| target.has_spi()
+	|| target.has_uarts() {
         pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
         if let Some(leds) = target.leds.as_ref() {
             pins.push_str(&render_led_pins(leds));
@@ -304,6 +319,9 @@ fn render_pins(target: &Target) -> String {
         }
         if let Some(spis) = target.spi.as_ref() {
             pins.push_str(&render_spi_pins(spis));
+	}
+        if let Some(uarts) = target.uarts.as_ref() {
+            pins.push_str(&render_uarts(uarts));
         }
     }
 
@@ -370,4 +388,75 @@ fn render_spi_pins(spis: &[SpiBus]) -> String {
     }
 
     spi_rs
+}
+
+fn render_uarts(uarts: &[Uart]) -> String {
+    let mut code = String::new();
+
+    code.push_str("ariel_os_hal::define_uarts![\n");
+
+    for (uart_number, uart) in uarts.iter().enumerate() {
+        let name = uart.name.as_ref().map_or_else(
+            || format!("_unnamed_uart_{uart_number}").into(),
+            std::borrow::Cow::from,
+        );
+        let Some(device) = uart.possible_peripherals.first() else {
+            eprintln!(
+                "warning: No peripheral defined for UART, making it unusable in Ariel output."
+            );
+            eprintln!("Affected UART: {uart:?}");
+            continue;
+        };
+        if uart.possible_peripherals.len() > 1
+        {
+            eprintln!(
+                "warning: Multiple hardware devices are available, but Ariel OS does not process any but the first."
+            );
+            eprintln!("Affected UART: {uart:?}");
+        }
+        // Deferring to a macro so that any actual logic in there is handled in the OS where it
+        // belongs; this merely processes the data into a format usable there.
+        writeln!(
+            code,
+            "{{ name: {}, device: {}, tx: {}, rx: {}, host_facing: {} }},",
+            name, device, uart.tx_pin, uart.rx_pin, uart.host_facing
+        )
+        .unwrap();
+    }
+
+    code.push_str("];\n");
+
+    code
+}
+
+#[test]
+fn test_render_uarts() {
+    let rendered = render_uarts(&[
+        Uart {
+            name: Some("CON0".to_string()),
+            rx_pin: "PA08".to_owned(),
+            tx_pin: "PC99".to_owned(),
+            cts_pin: None,
+            rts_pin: None,
+            possible_peripherals: vec!["UART2".to_owned(), "LEUART0".to_owned()],
+            host_facing: false,
+        },
+        Uart {
+            name: Some("VCOM".to_string()),
+            rx_pin: "P0_04".to_owned(),
+            tx_pin: "P1_23".to_owned(),
+            cts_pin: Some("P7.89".to_owned()),
+            rts_pin: Some("D5".to_owned()),
+            possible_peripherals: vec!["UART1".to_owned(), "LEUART0".to_owned()],
+            host_facing: true,
+        },
+    ]);
+    assert_eq!(
+        rendered,
+        "ariel_os_hal::define_uarts![
+{ name: CON0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
+{ name: VCOM, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
+];
+"
+    );
 }
