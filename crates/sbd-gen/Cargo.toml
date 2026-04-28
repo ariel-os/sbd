@@ -1,6 +1,6 @@
 [package]
 name = "sbd-gen"
-version = "0.3.1"
+version = "0.3.2"
 description = "A generator for turning SBD (Structured Board Descriptions) into BSPs."
 categories = ["command-line-utilities", "embedded", "hardware-support"]
 keywords = ["ariel", "board", "bsp", "riot"]
