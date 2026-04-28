@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.3.1...sbd-gen-v0.3.2) - 2026-04-28
+
+### Added
+
+- *(ariel)* add context to target rendering error
+- *(sbd-gen)* initial resource claiming infra
+
 ## [0.3.1](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.3.0...sbd-gen-v0.3.1) - 2026-04-08
 
 ### Other
