@@ -268,7 +268,7 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
     }
 
     // SPIs
-    if let Some(spi_buses) = &target.spi {
+    if let Some(spi_buses) = &target.spis {
         if !spi_buses.is_empty() {
             let mut spi_peripherals = riot_chip
                 .peripherals

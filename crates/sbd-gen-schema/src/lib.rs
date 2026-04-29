@@ -70,7 +70,7 @@ pub struct Target {
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub uarts: Option<Vec<Uart>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub spi: Option<Vec<SpiBus>>,
+    pub spis: Option<Vec<SpiBus>>,
 }
 
 impl Target {
@@ -94,7 +94,7 @@ impl Target {
 
     #[must_use]
     pub fn has_spi(&self) -> bool {
-        if let Some(spis) = &self.spi {
+        if let Some(spis) = &self.spis {
             !spis.is_empty()
         } else {
             false

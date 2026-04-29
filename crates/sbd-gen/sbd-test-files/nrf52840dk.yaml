@@ -36,7 +36,7 @@ targets:
         pin: P0_25
         active: low
 
-    spi:
+    spis:
       spi0:
         miso: P0_28
         mosi: P0_29
