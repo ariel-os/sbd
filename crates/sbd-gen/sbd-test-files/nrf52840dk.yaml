@@ -35,3 +35,14 @@ targets:
       button3:
         pin: P0_25
         active: low
+
+    spis:
+      spi0:
+        miso: P0_28
+        mosi: P0_29
+        sck: P0_27
+        devices:
+          device0:
+            cs: P0_30
+          device1:
+            cs: P0_31

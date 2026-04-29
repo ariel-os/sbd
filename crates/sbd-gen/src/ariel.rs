@@ -18,7 +18,15 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
+    Button,
+    Led,
+    PinLevel,
+    Quirk,
+    SbdFile,
+    SetPinOp,
+    SpiBus,
+    Target,
+    common::StringOrVecString,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -169,6 +177,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             if target.has_buttons() {
                 target_builder.provides.insert("has_buttons".into());
             }
+            if target.has_spi() {
+                target_builder.provides.insert("has_spi".into());
+            }
             if target.has_host_facing_uart() {
                 target_builder
                     .provides
@@ -248,6 +259,9 @@ impl<'a> RenderTarget<'a> {
             if let Some(buttons) = target.buttons.as_ref() {
                 pins.push_str(&self.render_button_pins(buttons)?);
             }
+            if let Some(spis) = target.spis.as_ref() {
+                pins.push_str(&self.render_spi_pins(spis)?);
+	        }
             if target.uarts.is_some() {
                 pins.push_str(&self.render_uarts()?);
             }
@@ -286,6 +300,43 @@ impl<'a> RenderTarget<'a> {
         buttons_rs.push_str("});\n");
 
         Ok(buttons_rs)
+    }
+
+    fn render_spi_pins(&mut self, spis: &'a [SpiBus]) -> Result<String> {
+        let mut spi_rs = String::new();
+
+        for spi in spis {
+
+            let struct_name = spi.name.as_deref().map_or_else(
+                || String::from("SpiPeripherals"),
+                |n| {
+                    let mut chars = n.chars();
+                    match chars.next() {
+                        None => String::from("SpiPeripherals"),
+                        Some(first) => {
+                            first.to_uppercase().collect::<String>() + chars.as_str() + "Peripherals"
+                        }
+                    }
+                },
+            );
+
+            self.resources.claim(&spi.miso, &struct_name)?;
+            self.resources.claim(&spi.mosi, &struct_name)?;
+            self.resources.claim(&spi.sck,  &struct_name)?;
+
+            let _ = writeln!(spi_rs, "ariel_os_hal::define_peripherals!({struct_name} {{");
+            let _ = writeln!(spi_rs, "miso: {},", spi.miso);
+            let _ = writeln!(spi_rs, "mosi: {},", spi.mosi);
+            let _ = writeln!(spi_rs, "sck: {},", spi.sck);
+            if let Some(devices) = &spi.devices {
+                for device in devices {
+                    let _ = writeln!(spi_rs, "{}_cs: {},", device.name, device.cs);
+                }
+            }
+            spi_rs.push_str("});\n");
+        }
+
+        Ok(spi_rs)
     }
 
     fn render_uarts(&mut self) -> Result<String> {
@@ -434,6 +485,7 @@ pub fn test_default_target() -> Target {
         leds: None,
         flags: std::collections::BTreeSet::default(),
         include: None,
+        spis: None,
         uarts: None,
         quirks: vec![],
         riot: sbd_gen_schema::riot::RiotTargetExt::default(),

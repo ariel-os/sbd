@@ -69,6 +69,8 @@ pub struct Target {
     pub buttons: Option<Vec<Button>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub uarts: Option<Vec<Uart>>,
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub spis: Option<Vec<SpiBus>>,
 }
 
 impl Target {
@@ -90,6 +92,14 @@ impl Target {
         }
     }
 
+    #[must_use]
+    pub fn has_spi(&self) -> bool {
+        if let Some(spis) = &self.spis {
+            !spis.is_empty()
+        } else {
+            false
+        }
+    }
     /// Returns true if there are any UARTs listed for this board.
     #[must_use]
     pub fn has_uarts(&self) -> bool {
@@ -229,6 +239,27 @@ pub struct Uart {
     /// report debug or measurement data.
     #[serde(default)]
     pub host_facing: bool,
+}
+
+#[serde_as]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiBus {
+    #[serde(rename = "$key$")]
+    pub name: Option<String>,
+    pub miso: String,
+    pub mosi: String,
+    pub sck: String,
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub devices: Option<Vec<SpiDevice>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiDevice {
+    #[serde(rename = "$key$")]
+    pub name: String,
+    pub cs: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
