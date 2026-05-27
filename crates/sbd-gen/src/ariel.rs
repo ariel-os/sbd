@@ -241,7 +241,6 @@ impl<'a> RenderTarget<'a> {
         let target = self.target;
 
         if target.has_leds() || target.has_buttons() || target.has_uarts() {
-            pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
             if let Some(leds) = target.leds.as_ref() {
                 pins.push_str(&self.render_led_pins(leds)?);
             }
