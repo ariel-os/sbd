@@ -278,6 +278,7 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
 
             let mut spis_configured = Vec::new();
             let mut all_cs_pins: Vec<(String, String, String)> = Vec::new();
+            let mut all_drdy_pins: Vec<(String, String, String)> = Vec::new();
 
             for spi_bus in spi_buses {
                 #[expect(clippy::unnecessary_find_map)]
@@ -306,6 +307,14 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
                                 device.name.to_uppercase(),
                                 cs_pin,
                             ));
+                            if let Some(drdy) = &device.drdy {
+                                let drdy_pin = name2riot_pin(drdy)?;
+                                all_drdy_pins.push((
+                                    bus_upper.clone(),
+                                    device.name.to_uppercase(),
+                                    drdy_pin,
+                                ));
+                            }
                         }
                     }
 
@@ -336,6 +345,12 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
                     let _ = writeln!(s, "#define SPI_CS_{bus_upper}_{device_upper}  ({cs_pin})");
                 }
                 if !all_cs_pins.is_empty() {
+                    s.push('\n');
+                }
+                for (bus_upper, device_upper, drdy_pin) in &all_drdy_pins {
+                    let _ = writeln!(s, "#define SPI_DRDY_{bus_upper}_{device_upper}  ({drdy_pin})");
+                }
+                if !all_drdy_pins.is_empty() {
                     s.push('\n');
                 }
 

@@ -330,7 +330,12 @@ impl<'a> RenderTarget<'a> {
             let _ = writeln!(spi_rs, "sck: {},", spi.sck);
             if let Some(devices) = &spi.devices {
                 for device in devices {
+                    self.resources.claim(&device.cs, &device.name)?;
                     let _ = writeln!(spi_rs, "{}_cs: {},", device.name, device.cs);
+                    if let Some(drdy) = &device.drdy {
+                        self.resources.claim(drdy, &device.name)?;
+                        let _ = writeln!(spi_rs, "{}_drdy: {},", device.name, drdy);
+                    }
                 }
             }
             spi_rs.push_str("});\n");

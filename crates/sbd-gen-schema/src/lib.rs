@@ -260,6 +260,8 @@ pub struct SpiDevice {
     #[serde(rename = "$key$")]
     pub name: String,
     pub cs: String,
+    /// Optional interrupt/data-ready line from the device to the MCU.
+    pub drdy: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -44,5 +44,6 @@ targets:
         devices:
           device0:
             cs: P0_30
+            drdy: P0_03
           device1:
             cs: P0_31
