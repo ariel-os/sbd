@@ -31,10 +31,19 @@ pub struct RiotQuirkEntry {
 pub struct RiotChipPeripherals {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub uarts: BTreeMap<String, RiotChipUartPeripheral>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub spis: BTreeMap<String, RiotChipSpiPeripheral>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub struct RiotChipUartPeripheral {
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub config: BTreeMap<String, String>,
+    pub isr: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub struct RiotChipSpiPeripheral {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub config: BTreeMap<String, String>,
     pub isr: Option<String>,
