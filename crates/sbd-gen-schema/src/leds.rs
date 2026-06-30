@@ -2,8 +2,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{PinActive, common::StringOrVecString};
 
-
-
 /// Monocolor LED.
 ///
 ///
@@ -67,7 +65,7 @@ pub struct LedMatrix {
     pub active: Option<PinActive>,
     /// Aliases for the LED matrix.
     #[serde(default)]
-    pub aliases: Vec<String>
+    pub aliases: Vec<String>,
 }
 
 /// LED using a single wire a serial communication protocol, also called a Smart-Pixel.

@@ -1,7 +1,7 @@
 pub mod ariel;
 pub mod common;
-pub mod riot;
 pub mod leds;
+pub mod riot;
 
 use std::collections::BTreeSet;
 
@@ -10,7 +10,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::{KeyValueMap, serde_as};
 
 use crate::{
-    ariel::{Ariel, ArielTargetExt}, common::StringOrVecString, leds::{MonocolorLed, SmartLed}, riot::{Riot, RiotTargetExt},
+    ariel::{Ariel, ArielTargetExt},
+    common::StringOrVecString,
+    leds::{MonocolorLed, SmartLed},
+    riot::{Riot, RiotTargetExt},
 };
 
 const fn default_version() -> Version {
