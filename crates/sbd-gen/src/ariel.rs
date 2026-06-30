@@ -18,7 +18,9 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Button, Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
+    Button, PinLevel, Quirk, SbdFile, SetPinOp, Target,
+    common::StringOrVecString,
+    leds::{BicolorLed, LedMatrix, MonocolorLed, SmartLed},
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -243,7 +245,10 @@ impl<'a> RenderTarget<'a> {
         if target.has_leds() || target.has_buttons() || target.has_uarts() {
             pins.push_str("use ariel_os_hal::hal::peripherals;\n\n");
             if let Some(leds) = target.leds.as_ref() {
-                pins.push_str(&self.render_led_pins(leds)?);
+                pins.push_str(&self.render_monocolor_led_pins(leds)?);
+            }
+            if let Some(leds) = target.smartleds.as_ref() {
+                pins.push_str(&self.render_smartled_pins(leds)?);
             }
             if let Some(buttons) = target.buttons.as_ref() {
                 pins.push_str(&self.render_button_pins(buttons)?);
@@ -258,10 +263,96 @@ impl<'a> RenderTarget<'a> {
         Ok(pins)
     }
 
-    fn render_led_pins(&mut self, leds: &'a [Led]) -> Result<String> {
+    fn render_monocolor_led_pins(&mut self, leds: &'a [MonocolorLed]) -> Result<String> {
         let mut leds_rs = String::new();
 
-        leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
+        leds_rs.push_str("ariel_os_hal::define_peripherals!(MonocolorLedPeripherals {\n");
+
+        for led in leds {
+            self.resources.claim(&led.pin, &led.name)?;
+            let _ = writeln!(leds_rs, "{}: {},", led.name, led.pin);
+        }
+
+        leds_rs.push_str("});\n");
+
+        Ok(leds_rs)
+    }
+
+    fn render_bicolor_led_pins(&mut self, leds: &'a [BicolorLed]) -> Result<String> {
+        let mut leds_rs = String::new();
+
+        leds_rs.push_str("ariel_os_hal::define_peripherals!(BicolorLedPeripherals {\n");
+
+        for led in leds {
+            self.resources.claim(&led.pins[0], &led.name)?;
+            self.resources.claim(&led.pins[1], &led.name)?;
+            let colors_or_number = led
+                .colors
+                .clone()
+                .unwrap_or([String::from("1"), String::from("2")]);
+            let _ = writeln!(
+                leds_rs,
+                "{}_{}: {},",
+                led.name, colors_or_number[0], led.pins[0]
+            );
+            let _ = writeln!(
+                leds_rs,
+                "{}_{}: {},",
+                led.name, colors_or_number[1], led.pins[1]
+            );
+        }
+
+        leds_rs.push_str("});\n");
+
+        Ok(leds_rs)
+    }
+
+    fn render_led_matrix_pins(&mut self, leds: &'a [LedMatrix]) -> Result<String> {
+        let mut leds_rs = String::new();
+
+        for led_matrix in leds {
+            // Define "Row pins" for the LED Matrix
+            let _ = writeln!(
+                leds_rs,
+                "ariel_os_hal::define_peripherals!({}RowPins {{",
+                led_matrix.name
+            );
+            for (i, pin) in led_matrix.row.iter().enumerate() {
+                self.resources.claim(pin, &led_matrix.name)?;
+                let _ = writeln!(leds_rs, "p_r{i}: {pin},");
+            }
+            let _ = writeln!(leds_rs, "}});");
+
+            // Define "Column pins" for the LED Matrix
+            let _ = writeln!(
+                leds_rs,
+                "ariel_os_hal::define_peripherals!({}ColumnPins {{",
+                led_matrix.name
+            );
+            for (i, pin) in led_matrix.col.iter().enumerate() {
+                self.resources.claim(pin, &led_matrix.name)?;
+                let _ = writeln!(leds_rs, "p_r{i}: {pin},");
+            }
+            let _ = write!(leds_rs, "}});");
+
+            // Group row and column peripherals in a single
+            let _ = write!(
+                leds_rs,
+                "ariel_os_hal::group_peripherals!({} {{",
+                led_matrix.name
+            );
+            let _ = writeln!(leds_rs, "rows: {}RowPins,", led_matrix.name);
+            let _ = writeln!(leds_rs, "cols: {}ColumnPins,", led_matrix.name);
+            let _ = writeln!(leds_rs, "}});");
+        }
+
+        Ok(leds_rs)
+    }
+
+    fn render_smartled_pins(&mut self, leds: &'a [SmartLed]) -> Result<String> {
+        let mut leds_rs = String::new();
+
+        leds_rs.push_str("ariel_os_hal::define_peripherals!(SmartLedPeripherals {\n");
 
         for led in leds {
             self.resources.claim(&led.pin, &led.name)?;
@@ -432,6 +523,7 @@ pub fn test_default_target() -> Target {
         debugger: None,
         description: None,
         leds: None,
+        smartleds: None,
         flags: std::collections::BTreeSet::default(),
         include: None,
         uarts: None,

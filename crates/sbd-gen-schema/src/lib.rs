@@ -1,5 +1,6 @@
 pub mod ariel;
 pub mod common;
+pub mod leds;
 pub mod riot;
 
 use std::collections::BTreeSet;
@@ -11,6 +12,7 @@ use serde_with::{KeyValueMap, serde_as};
 use crate::{
     ariel::{Ariel, ArielTargetExt},
     common::StringOrVecString,
+    leds::{MonocolorLed, SmartLed},
     riot::{Riot, RiotTargetExt},
 };
 
@@ -26,7 +28,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 3, 1)
+    semver::Version::new(0, 3, 2)
 }
 
 #[serde_as]
@@ -64,9 +66,11 @@ pub struct Target {
 
     // peripheral types
     #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub leds: Option<Vec<Led>>,
+    pub leds: Option<Vec<MonocolorLed>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub buttons: Option<Vec<Button>>,
+    #[serde_as(as = "Option<KeyValueMap<_>>")]
+    pub smartleds: Option<Vec<SmartLed>>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
     pub uarts: Option<Vec<Uart>>,
 }
