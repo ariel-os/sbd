@@ -18,10 +18,9 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    Button, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
-    leds::{
-        MonocolorLed, LedMatrix, SmartLed, BicolorLed,
-    }
+    Button, PinLevel, Quirk, SbdFile, SetPinOp, Target,
+    common::StringOrVecString,
+    leds::{BicolorLed, LedMatrix, MonocolorLed, SmartLed},
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -287,9 +286,20 @@ impl<'a> RenderTarget<'a> {
         for led in leds {
             self.resources.claim(&led.pins[0], &led.name)?;
             self.resources.claim(&led.pins[1], &led.name)?;
-            let colors_or_number = led.colors.clone().unwrap_or([String::from("1"), String::from("2")]);
-            let _ = writeln!(leds_rs, "{}_{}: {},", led.name, colors_or_number[0], led.pins[0]);
-            let _ = writeln!(leds_rs, "{}_{}: {},", led.name, colors_or_number[1], led.pins[1]);
+            let colors_or_number = led
+                .colors
+                .clone()
+                .unwrap_or([String::from("1"), String::from("2")]);
+            let _ = writeln!(
+                leds_rs,
+                "{}_{}: {},",
+                led.name, colors_or_number[0], led.pins[0]
+            );
+            let _ = writeln!(
+                leds_rs,
+                "{}_{}: {},",
+                led.name, colors_or_number[1], led.pins[1]
+            );
         }
 
         leds_rs.push_str("});\n");
@@ -302,23 +312,35 @@ impl<'a> RenderTarget<'a> {
 
         for led_matrix in leds {
             // Define "Row pins" for the LED Matrix
-            let _ = writeln!(leds_rs, "ariel_os_hal::define_peripherals!({}RowPins {{", led_matrix.name);
+            let _ = writeln!(
+                leds_rs,
+                "ariel_os_hal::define_peripherals!({}RowPins {{",
+                led_matrix.name
+            );
             for (i, pin) in led_matrix.row.iter().enumerate() {
                 self.resources.claim(pin, &led_matrix.name)?;
-                let _ = writeln!(leds_rs, "p_r{}: {},", i, pin);
+                let _ = writeln!(leds_rs, "p_r{i}: {pin},");
             }
             let _ = writeln!(leds_rs, "}});");
 
             // Define "Column pins" for the LED Matrix
-            let _ = writeln!(leds_rs, "ariel_os_hal::define_peripherals!({}ColumnPins {{", led_matrix.name);
+            let _ = writeln!(
+                leds_rs,
+                "ariel_os_hal::define_peripherals!({}ColumnPins {{",
+                led_matrix.name
+            );
             for (i, pin) in led_matrix.col.iter().enumerate() {
                 self.resources.claim(pin, &led_matrix.name)?;
-                let _ = writeln!(leds_rs, "p_r{}: {},", i, pin);
+                let _ = writeln!(leds_rs, "p_r{i}: {pin},");
             }
             let _ = write!(leds_rs, "}});");
 
             // Group row and column peripherals in a single
-            let _ = write!(leds_rs, "ariel_os_hal::group_peripherals!({} {{", led_matrix.name);
+            let _ = write!(
+                leds_rs,
+                "ariel_os_hal::group_peripherals!({} {{",
+                led_matrix.name
+            );
             let _ = writeln!(leds_rs, "rows: {}RowPins,", led_matrix.name);
             let _ = writeln!(leds_rs, "cols: {}ColumnPins,", led_matrix.name);
             let _ = writeln!(leds_rs, "}});");
@@ -501,6 +523,7 @@ pub fn test_default_target() -> Target {
         debugger: None,
         description: None,
         leds: None,
+        smartleds: None,
         flags: std::collections::BTreeSet::default(),
         include: None,
         uarts: None,
