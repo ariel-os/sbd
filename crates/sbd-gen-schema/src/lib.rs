@@ -19,7 +19,7 @@ use crate::{
     switches::{Button, Switch},
 };
 
-pub use led::MonocolorLed;
+pub use led::{DuocolorLed, MonocolorLed, PentacolorLed, TetracolorLed, TricolorLed, Led};
 
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)
@@ -71,7 +71,7 @@ pub struct Target {
 
     // peripheral types
     #[serde(default)]
-    pub leds: Vec<MonocolorLed>,
+    pub leds: Vec<Led>,
     /// Push buttons present on the board
     #[serde(default)]
     pub buttons: Vec<Button>,
