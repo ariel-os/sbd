@@ -17,7 +17,7 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
+use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString, Led};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -263,8 +263,49 @@ impl<'a> RenderTarget<'a> {
 
         for (n, led) in leds.iter().enumerate() {
             let name = format!("led{n}");
-            self.resources.claim(&led.pin, &name)?;
-            let _ = writeln!(leds_rs, "{}: {},", name, led.pin);
+            match led {
+                Led::Monocolor(mono) => {
+                    self.resources.claim(&mono.pin, &name)?;
+                    let _ = writeln!(leds_rs, "{}: {},", name, mono.pin);
+                }
+                Led::Duocolor(duo) => {
+                    self.resources.claim(&duo.pins[0], &name)?;
+                    self.resources.claim(&duo.pins[1], &name)?;
+                    let _ = writeln!(leds_rs, "{}_0: {}", name, &duo.pins[0]);
+                    let _ = writeln!(leds_rs, "{}_1: {}", name, &duo.pins[1]);
+                }
+                Led::Tricolor(trio) => {
+                    self.resources.claim(&trio.pins[0], &name)?;
+                    self.resources.claim(&trio.pins[1], &name)?;
+                    self.resources.claim(&trio.pins[2], &name)?;
+                    let _ = writeln!(leds_rs, "{}_0: {}", name, &trio.pins[0]);
+                    let _ = writeln!(leds_rs, "{}_1: {}", name, &trio.pins[1]);
+                    let _ = writeln!(leds_rs, "{}_2: {}", name, &trio.pins[2]);
+                }
+                Led::Tetracolor(tetra) => {
+                    self.resources.claim(&tetra.pins[0], &name)?;
+                    self.resources.claim(&tetra.pins[1], &name)?;
+                    self.resources.claim(&tetra.pins[2], &name)?;
+                    self.resources.claim(&tetra.pins[3], &name)?;
+                    let _ = writeln!(leds_rs, "{}_0: {}", name, &tetra.pins[0]);
+                    let _ = writeln!(leds_rs, "{}_1: {}", name, &tetra.pins[1]);
+                    let _ = writeln!(leds_rs, "{}_2: {}", name, &tetra.pins[2]);
+                    let _ = writeln!(leds_rs, "{}_3: {}", name, &tetra.pins[3]);
+                }
+                Led::Pentacolor(penta) => {
+                    self.resources.claim(&penta.pins[0], &name)?;
+                    self.resources.claim(&penta.pins[1], &name)?;
+                    self.resources.claim(&penta.pins[2], &name)?;
+                    self.resources.claim(&penta.pins[3], &name)?;
+                    self.resources.claim(&penta.pins[4], &name)?;
+                    let _ = writeln!(leds_rs, "{}_0: {}", name, &penta.pins[0]);
+                    let _ = writeln!(leds_rs, "{}_1: {}", name, &penta.pins[1]);
+                    let _ = writeln!(leds_rs, "{}_2: {}", name, &penta.pins[2]);
+                    let _ = writeln!(leds_rs, "{}_3: {}", name, &penta.pins[3]);
+                    let _ = writeln!(leds_rs, "{}_4: {}", name, &penta.pins[4]);
+                }
+            }
+
         }
 
         leds_rs.push_str("});\n");

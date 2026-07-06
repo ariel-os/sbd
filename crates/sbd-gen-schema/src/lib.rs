@@ -15,7 +15,7 @@ use crate::{
     riot::{Riot, RiotTargetExt},
 };
 
-pub use led::MonocolorLed;
+pub use led::{DuocolorLed, MonocolorLed, PentacolorLed, TetracolorLed, TricolorLed, Led};
 
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)
@@ -29,7 +29,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 4, 0)
+    semver::Version::new(0, 4, 1)
 }
 
 #[serde_as]
@@ -67,7 +67,7 @@ pub struct Target {
 
     // peripheral types
     #[serde(default)]
-    pub leds: Vec<MonocolorLed>,
+    pub leds: Vec<Led>,
     #[serde(default)]
     pub buttons: Vec<Button>,
     #[serde(default)]
