@@ -68,7 +68,7 @@ pub struct Target {
 
     // peripheral types
     #[serde(default)]
-    pub leds: Vec<Led>,
+    pub leds: Vec<MonocolorLed>,
     /// Push buttons present on the board
     #[serde(default)]
     pub buttons: Vec<Button>,
@@ -120,7 +120,7 @@ impl Target {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Led {
+pub struct MonocolorLed {
     pub pin: String,
     pub color: Option<String>,
     pub active: Option<PinActive>,
