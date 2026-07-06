@@ -1,6 +1,7 @@
 pub mod ariel;
 pub mod common;
 pub mod i2c;
+pub mod led;
 pub mod riot;
 pub mod switches;
 
@@ -17,6 +18,8 @@ use crate::{
     riot::{Riot, RiotTargetExt},
     switches::{Button, Switch},
 };
+
+pub use led::MonocolorLed;
 
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)
@@ -116,16 +119,6 @@ impl Target {
     pub fn has_host_facing_uart(&self) -> bool {
         self.uarts.iter().any(|u| u.host_facing)
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct MonocolorLed {
-    pub pin: String,
-    pub color: Option<String>,
-    pub active: Option<PinActive>,
-    #[serde(default)]
-    pub aliases: Vec<String>,
 }
 
 /// Presence or absence of a PullUp/Down resistor.
