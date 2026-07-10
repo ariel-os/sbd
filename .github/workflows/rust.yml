@@ -18,6 +18,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Lint
       run: cargo clippy --locked
+    - name: Format
+      run: cargo fmt --all --check
     - name: Build
       run: cargo build
     - name: Run tests
