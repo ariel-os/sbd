@@ -26,7 +26,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 3, 1)
+    semver::Version::new(0, 4, 0)
 }
 
 #[serde_as]
@@ -63,33 +63,25 @@ pub struct Target {
     pub debugger: Option<Debugger>,
 
     // peripheral types
+    #[serde(default)]
+    pub leds: Vec<Led>,
+    #[serde(default)]
+    pub buttons: Vec<Button>,
+    #[serde(default)]
+    pub uarts: Vec<Uart>,
     #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub leds: Option<Vec<Led>>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub buttons: Option<Vec<Button>>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub uarts: Option<Vec<Uart>>,
-    #[serde_as(as = "Option<KeyValueMap<_>>")]
-    pub spis: Option<Vec<SpiBus>>,
+    pub spis: Vec<SpiBus>,
 }
 
 impl Target {
     #[must_use]
     pub fn has_leds(&self) -> bool {
-        if let Some(leds) = &self.leds {
-            !leds.is_empty()
-        } else {
-            false
-        }
+        !self.leds.is_empty()
     }
 
     #[must_use]
     pub fn has_buttons(&self) -> bool {
-        if let Some(buttons) = &self.buttons {
-            !buttons.is_empty()
-        } else {
-            false
-        }
+        !self.buttons.is_empty()
     }
 
     #[must_use]
@@ -103,30 +95,20 @@ impl Target {
     /// Returns true if there are any UARTs listed for this board.
     #[must_use]
     pub fn has_uarts(&self) -> bool {
-        if let Some(uarts) = &self.uarts {
-            !uarts.is_empty()
-        } else {
-            false
-        }
+        !self.uarts.is_empty()
     }
 
     /// Returns true if there are any UARTs listed for this board that have the
     /// [`Uart::host_facing`] property.
     #[must_use]
     pub fn has_host_facing_uart(&self) -> bool {
-        if let Some(uarts) = &self.uarts {
-            uarts.iter().any(|u| u.host_facing)
-        } else {
-            false
-        }
+        self.uarts.iter().any(|u| u.host_facing)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Led {
-    #[serde(rename = "$key$")]
-    pub name: String,
     pub pin: String,
     pub color: Option<String>,
     pub active: Option<PinActive>,
@@ -137,8 +119,6 @@ pub struct Led {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Button {
-    #[serde(rename = "$key$")]
-    pub name: String,
     pub pin: String,
     pub active: Option<PinActive>,
     #[serde(default)]
@@ -190,8 +170,8 @@ pub struct Debugger {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Uart {
-    #[serde(rename = "$key$")]
-    pub name: Option<String>,
+    #[serde(default)]
+    pub aliases: Vec<String>,
     pub rx_pin: String,
     pub tx_pin: String,
     pub cts_pin: Option<String>,
