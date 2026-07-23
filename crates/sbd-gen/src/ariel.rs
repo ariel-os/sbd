@@ -17,7 +17,7 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString, Led};
+use sbd_gen_schema::{Led, PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -305,7 +305,6 @@ impl<'a> RenderTarget<'a> {
                     let _ = writeln!(leds_rs, "{}_4: {}", name, &penta.pins[4]);
                 }
             }
-
         }
 
         leds_rs.push_str("});\n");

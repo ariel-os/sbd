@@ -20,7 +20,6 @@ pub enum Led {
     Pentacolor(PentacolorLed),
 }
 
-
 /// Monocolor LED.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
