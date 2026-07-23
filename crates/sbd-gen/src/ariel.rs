@@ -17,9 +17,7 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{
-    PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString,
-};
+use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
