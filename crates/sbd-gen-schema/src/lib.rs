@@ -19,7 +19,7 @@ use crate::{
     switches::{Button, Switch},
 };
 
-pub use led::{DuocolorLed, MonocolorLed, PentacolorLed, TetracolorLed, TricolorLed, Led};
+pub use led::{DuocolorLed, Led, MonocolorLed, PentacolorLed, TetracolorLed, TricolorLed};
 
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)

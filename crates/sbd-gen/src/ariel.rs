@@ -323,7 +323,6 @@ impl<'a> RenderTarget<'a> {
                     let _ = writeln!(leds_rs, "{}_4: {}", name, &penta.pins[4]);
                 }
             }
-
         }
 
         leds_rs.push_str("});\n");
