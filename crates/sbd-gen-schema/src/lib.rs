@@ -11,8 +11,8 @@ use serde_with::{KeyValueMap, serde_as};
 
 use crate::{
     ariel::{Ariel, ArielTargetExt},
-    common::StringOrVecString,
     i2c::I2cBus,
+    common::{StringOrVecString, TOrVecT},
     riot::{Riot, RiotTargetExt},
 };
 
@@ -28,7 +28,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 4, 1)
+    semver::Version::new(0, 5, 0)
 }
 
 #[serde_as]
@@ -68,7 +68,7 @@ pub struct Target {
     #[serde(default)]
     pub leds: Vec<Led>,
     #[serde(default)]
-    pub buttons: Vec<Button>,
+    pub switches: Vec<Switch>,
     #[serde(default)]
     pub i2c: Vec<I2cBus>,
     #[serde(default)]
@@ -82,8 +82,8 @@ impl Target {
     }
 
     #[must_use]
-    pub fn has_buttons(&self) -> bool {
-        !self.buttons.is_empty()
+    pub fn has_switches(&self) -> bool {
+        !self.switches.is_empty()
     }
 
     /// Returns true if there are any I2C bus listed for this board.
@@ -116,13 +116,36 @@ pub struct Led {
     pub aliases: Vec<String>,
 }
 
+/// A Switch in the electrical sense regardless of their physical form.
+///
+/// This includes buttons, jumper switches, dip switches etc.
+/// For buttons, their are no expectations in the number of stable outputs.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Button {
-    pub pin: String,
-    pub active: Option<PinActive>,
+pub struct Switch {
+    /// Pins that are connected to the outputs of the switch
+    pub outputs: StringOrVecString,
+    /// Resistors defining the state of the outputs when they are 'open'.
+    pub resistors: Option<TOrVecT<PullResistor>>,
+    /// Number of stable states, should be between 1 and ``outputs.len()`` + 1
+    pub stability: Option<u64>,
+    /// Description of the physical form of the switch and how to interact with it
+    pub description: Option<String>,
     #[serde(default)]
     pub aliases: Vec<String>,
+}
+
+/// Presence or absence of a PullUp/Down resistor.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum PullResistor {
+    #[serde(rename = "pullup")]
+    PullUp,
+    #[serde(rename = "pulldown")]
+    PullDown,
+    #[serde(rename = "unknown")]
+    Unknown,
+    #[serde(rename = "none")]
+    Absent
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
