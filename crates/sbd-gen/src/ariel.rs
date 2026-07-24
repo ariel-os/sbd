@@ -259,6 +259,7 @@ impl<'a> RenderTarget<'a> {
             || target.has_uarts()
             || target.has_i2c_bus()
             || target.has_buttons()
+            || target.has_pixels()
         {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
@@ -274,6 +275,9 @@ impl<'a> RenderTarget<'a> {
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
+            }
+            if target.has_pixels() {
+                pins.push_str(&self.render_pixel_pins()?);
             }
         }
 
@@ -310,6 +314,22 @@ impl<'a> RenderTarget<'a> {
         Ok(leds_rs)
     }
 
+    fn render_pixel_pins(&mut self) -> Result<String> {
+        let pixels = &self.target.pixels;
+        let mut pixels_rs = String::new();
+        pixels_rs.push_str("ariel_os_hal::define_peripherals!(PixelPeripherals {\n");
+
+        for (n, pixel) in pixels.iter().enumerate() {
+            let name = format!("pixel{n}");
+            self.resources.claim(&pixel.pin, &name)?;
+            let _ = writeln!(pixels_rs, "{}: {},", name, pixel.pin);
+        }
+
+        pixels_rs.push_str("});");
+
+        Ok(pixels_rs)
+    }
+
     fn render_switches(&mut self) -> Result<String> {
         let switches = &self.target.switches;
         let mut switches_rs = String::new();
@@ -319,7 +339,6 @@ impl<'a> RenderTarget<'a> {
             let mut all_pins: Vec<String> = vec![];
             let mut pull_resistors = vec![];
             let mut activity_level = vec![];
-
             match &switch.pins {
                 StringOrVecString::String(pin) => {
                     self.resources.claim(pin, &name)?;
@@ -641,6 +660,7 @@ pub fn test_default_target() -> Target {
         buttons: vec![],
         leds: vec![],
         uarts: vec![],
+        pixels: vec![],
         quirks: vec![],
         i2c: vec![],
     }
