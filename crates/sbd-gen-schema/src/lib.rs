@@ -126,6 +126,8 @@ pub struct Pixel {
     pub pin: String,
     /// Specific protocol that the smart pixel uses.
     pub protocol: Option<String>,
+    /// Number of chained pixels
+    pub size: u64,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
