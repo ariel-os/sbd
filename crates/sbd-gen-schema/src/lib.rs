@@ -72,6 +72,8 @@ pub struct Target {
     pub buttons: Vec<Button>,
     #[serde(default)]
     pub uarts: Vec<Uart>,
+    #[serde(default)]
+    pub pixels: Vec<Pixel>,
 }
 
 impl Target {
@@ -97,6 +99,11 @@ impl Target {
     pub fn has_host_facing_uart(&self) -> bool {
         self.uarts.iter().any(|u| u.host_facing)
     }
+
+    #[must_use]
+    pub fn has_pixels(&self) -> bool {
+        !self.pixels.is_empty()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -104,6 +111,21 @@ impl Target {
 pub struct Button {
     pub pin: String,
     pub active: Option<PinActive>,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+}
+
+/// Smart Pixels, Neo or RGB LED.
+///
+/// This represent LED ICs that are connected to the MCU using a single wire
+/// and a serial protocol such as WS2812B.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Pixel {
+    /// Pin.
+    pub pin: String,
+    /// Specific protocol that the smart pixel uses.
+    pub protocol: Option<String>,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
