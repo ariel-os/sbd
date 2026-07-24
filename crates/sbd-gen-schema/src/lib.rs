@@ -135,7 +135,7 @@ pub enum PullResistor {
     #[serde(rename = "unknown")]
     Unknown,
     #[serde(rename = "none")]
-    Absent
+    Absent,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -284,7 +284,7 @@ impl<'a> RenderTarget<'a> {
                 StringOrVecString::String(pin) => {
                     self.resources.claim(pin, &name)?;
                     let _ = writeln!(switches_rs, "{name}: {pin},");
-                },
+                }
                 StringOrVecString::VecString(pins) => {
                     for (i, pin) in pins.iter().enumerate() {
                         self.resources.claim(pin, &name)?;
