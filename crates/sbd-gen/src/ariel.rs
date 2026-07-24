@@ -238,7 +238,7 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_buttons() || target.has_uarts() {
+        if target.has_leds() || target.has_buttons() || target.has_uarts() || target.has_pixels() {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }
@@ -247,6 +247,9 @@ impl<'a> RenderTarget<'a> {
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
+            }
+            if target.has_pixels() {
+                pins.push_str(&self.render_pixel_pins()?);
             }
         }
 
@@ -310,6 +313,22 @@ impl<'a> RenderTarget<'a> {
         leds_rs.push_str("});\n");
 
         Ok(leds_rs)
+    }
+
+    fn render_pixel_pins(&mut self) -> Result<String> {
+        let pixels = &self.target.pixels;
+        let mut pixels_rs = String::new();
+        pixels_rs.push_str("ariel_os_hal::define_peripherals!(PixelPeripherals {\n");
+
+        for (n, pixel) in pixels.iter().enumerate() {
+            let name = format!("pixel{n}");
+            self.resources.claim(&pixel.pin, &name)?;
+            let _ = writeln!(pixels_rs, "{}: {},", name, pixel.pin);
+        }
+
+        pixels_rs.push_str("});");
+
+        Ok(pixels_rs)
     }
 
     fn render_button_pins(&mut self) -> Result<String> {
@@ -472,6 +491,7 @@ pub fn test_default_target() -> Target {
         flags: std::collections::BTreeSet::default(),
         include: None,
         uarts: vec![],
+        pixels: vec![],
         quirks: vec![],
         riot: sbd_gen_schema::riot::RiotTargetExt::default(),
     }
