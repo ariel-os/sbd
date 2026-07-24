@@ -30,7 +30,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 5, 0)
+    semver::Version::new(0, 5, 1)
 }
 
 #[serde_as]
