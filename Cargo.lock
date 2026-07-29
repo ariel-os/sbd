@@ -542,7 +542,7 @@ dependencies = [
  "serde",
  "serde_with",
  "serde_yaml",
- "syn 2.0.119",
+ "syn 3.0.2",
  "toml",
  "walkdir",
  "yaml-hash",
