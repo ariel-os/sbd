@@ -164,8 +164,8 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             if target.has_leds() {
                 target_builder.provides.insert("has_leds".into());
             }
-            if target.has_buttons() {
-                target_builder.provides.insert("has_buttons".into());
+            if target.has_switches() {
+                target_builder.provides.insert("has_switches".into());
             }
             if target.has_host_facing_uart() {
                 target_builder
@@ -238,12 +238,12 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_buttons() || target.has_uarts() {
+        if target.has_leds() || target.has_switches() || target.has_uarts() {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }
-            if target.has_buttons() {
-                pins.push_str(&self.render_button_pins()?);
+            if target.has_switches() {
+                pins.push_str(&self.render_switches_pins()?);
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
@@ -272,21 +272,31 @@ impl<'a> RenderTarget<'a> {
         Ok(leds_rs)
     }
 
-    fn render_button_pins(&mut self) -> Result<String> {
-        let buttons = &self.target.buttons;
-        let mut buttons_rs = String::new();
+    fn render_switches_pins(&mut self) -> Result<String> {
+        let switches = &self.target.switches;
+        let mut switches_rs = String::new();
 
-        buttons_rs.push_str("ariel_os_hal::define_peripherals!(ButtonPeripherals {\n");
+        switches_rs.push_str("ariel_os_hal::define_peripherals!(SwitchPeripherals {\n");
 
-        for (n, button) in buttons.iter().enumerate() {
-            let name = format!("button{n}");
-            self.resources.claim(&button.pin, &name)?;
-            let _ = writeln!(buttons_rs, "{}: {},", name, button.pin);
+        for (n, switch) in switches.iter().enumerate() {
+            let name = format!("switch{n}");
+            match &switch.outputs {
+                StringOrVecString::String(pin) => {
+                    self.resources.claim(pin, &name)?;
+                    let _ = writeln!(switches_rs, "{name}: {pin},");
+                }
+                StringOrVecString::VecString(pins) => {
+                    for (i, pin) in pins.iter().enumerate() {
+                        self.resources.claim(pin, &name)?;
+                        let _ = writeln!(switches_rs, "{name}_{i}: {pin},");
+                    }
+                }
+            }
         }
 
-        buttons_rs.push_str("});\n");
+        switches_rs.push_str("});\n");
 
-        Ok(buttons_rs)
+        Ok(switches_rs)
     }
 
     fn render_uarts(&mut self) -> Result<String> {
@@ -424,7 +434,7 @@ pub fn test_default_target() -> Target {
     Target {
         name: "test-target".to_string(),
         ariel: sbd_gen_schema::ariel::ArielTargetExt::default(),
-        buttons: vec![],
+        switches: vec![],
         chip: "test-chip".to_string(),
         debugger: None,
         description: None,
