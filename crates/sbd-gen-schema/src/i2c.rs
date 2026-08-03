@@ -38,7 +38,7 @@ pub struct I2cDevice {
     /// This is supposed to be an *identifier*.
     /// In the Ariel OS generator, this will set the flag `has_i2c_device_<type>`.
     #[serde(rename = "type", deserialize_with = "string_or_struct")]
-    type_: I2CDeviceType,
+    pub type_: I2CDeviceType,
 
     /// Part name of the device coming from the supplier.
     ///
@@ -47,16 +47,14 @@ pub struct I2cDevice {
     /// Right now, this is only possible for sensors for which there is
     /// an `ariel-os-sensor-x` crate.
     #[serde(default)]
-    part_name: Option<String>,
+    pub part_number: Option<String>,
     /// Device address on bus in hex.
-    address: String,
+    pub address: String,
 }
 
 
 /// Device types.
-#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(untagged)]
 pub enum I2CDeviceType {
     /// A sensor of a specific type.
     ///
