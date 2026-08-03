@@ -355,13 +355,22 @@ impl<'a> RenderTarget<'a> {
         Ok(code)
     }
 
-    fn render_i2c_buses(&self) -> Result<String> {
+    fn render_i2c_buses(&mut self) -> Result<String> {
         let i2c_buses = &self.target.i2c;
         let mut code = String::new();
-        // TODO
+        code.push_str("ariel_os_hal::define_peripherals!(I2CPeripherals{\n");
 
-        // code.push_str("ariel_os_hal::define_i2c_bus![\n");
-        // code.push_str("]\n");
+        for (n, bus) in i2c_buses.iter().enumerate() {
+            let bus_name = format!("i2c{n}");
+
+
+            self.resources.claim(&bus.sda_pin, &bus_name)?;
+            self.resources.claim(&bus.scl_pin, &bus_name)?;
+
+            let _ = writeln!(code, "{}_sda: {},", bus_name, bus.sda_pin);
+            let _ = writeln!(code, "{}_scl: {},", bus_name, bus.scl_pin);
+        }
+        code.push_str("});\n");
 
         Ok(code)
     }
@@ -453,6 +462,7 @@ pub fn test_default_target() -> Target {
         include: None,
         uarts: vec![],
         quirks: vec![],
+        i2c: vec![],
         riot: sbd_gen_schema::riot::RiotTargetExt::default(),
     }
 }
