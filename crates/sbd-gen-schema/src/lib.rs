@@ -1,6 +1,7 @@
 pub mod ariel;
 pub mod common;
 pub mod riot;
+pub mod i2c;
 
 use std::collections::BTreeSet;
 
@@ -12,6 +13,7 @@ use crate::{
     ariel::{Ariel, ArielTargetExt},
     common::StringOrVecString,
     riot::{Riot, RiotTargetExt},
+    i2c::I2cBus,
 };
 
 const fn default_version() -> Version {
@@ -163,33 +165,6 @@ pub struct Debugger {
     #[serde(rename = "type")]
     pub type_: String,
     pub uart: Option<Uart>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct I2cBus {
-    pub scl_pin: String,
-    pub sda_pin: String,
-    #[serde(default)]
-    pub aliases: Vec<String>,
-    #[serde(default)]
-    pub devices: Vec<I2cDevice>,
-    #[serde(default)]
-    pub possible_peripherals: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct I2cDevice {
-    /// Device type.
-    ///
-    /// This is supposed to be an *identifier*.
-    /// In the Ariel OS generator, this will set the flag `has_i2c_device_<type>`.
-    #[serde(rename = "type")]
-    type_: String,
-
-    /// Device address on bus in hex.
-    address: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
