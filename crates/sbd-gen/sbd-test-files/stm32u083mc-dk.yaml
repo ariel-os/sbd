@@ -1,0 +1,29 @@
+version: 0.4.0
+targets:
+  stm32u083c-dk:
+    chip: stm32u083mc
+    flags:
+      - has_usb_device_port
+    ariel:
+      swi: USART4_LPUART3
+    leds:
+      # led0
+      - pin: PC13
+        color: green
+      # led1
+      - pin: PA5
+        color: blue
+      # led2
+      - pin: PB2
+        color: red
+    buttons:
+      # button0
+      - pin: PC2
+    i2c:
+      - scl_pin: PB8
+        sda_pin: PB7
+        devices:
+          - type:
+              sensor: test
+            address: 0x7e
+            part_number: STTS22H
