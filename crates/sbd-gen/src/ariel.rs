@@ -384,24 +384,26 @@ impl<'a> RenderTarget<'a> {
             // claiming i2C peripheral here
             self.resources.claim(peri, &bus_name)?;
 
-            let mut aliases_string = String::new();
-
             if bus.aliases.is_empty() {
-                aliases_string.push_str(&bus_name);
-                aliases_string.push(',');
+                writeln!(
+                    code,
+                    "{{ name: {}, peripheral: {}, sda: {}, scl: {} }},",
+                    bus_name, peri, bus.sda_pin, bus.scl_pin,
+                )
+                .unwrap();
             } else {
+                let mut aliases_string = String::new();
                 for alias in &bus.aliases {
                     aliases_string.push_str(alias);
                     aliases_string.push(',');
                 }
+                writeln!(
+                    code,
+                    "{{ name: {}, peripheral: {}, sda: {}, scl: {}, aliases: [{}] }},",
+                    bus_name, peri, bus.sda_pin, bus.scl_pin, aliases_string
+                )
+                .unwrap();
             }
-
-            writeln!(
-                code,
-                "{{ name: {}, peripheral: {}, sda: {}, scl: {}, aliases: [{}] }},",
-                bus_name, peri, bus.sda_pin, bus.scl_pin, aliases_string
-            )
-            .unwrap();
         }
         code.push_str("];\n");
 
