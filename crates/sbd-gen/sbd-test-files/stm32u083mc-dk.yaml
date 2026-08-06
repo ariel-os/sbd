@@ -1,4 +1,4 @@
-version: 0.4.0
+version: 0.4.1
 targets:
   stm32u083c-dk:
     chip: stm32u083mc
@@ -23,7 +23,12 @@ targets:
       - scl_pin: PB8
         sda_pin: PB7
         devices:
-          - type:
-              sensor: test
+          - type: sensor
             address: 0x7e
             part_number: STTS22H
+            description: Temperature Sensor
+        possible_peripherals:
+          - I2C1
+        aliases:
+          - SensorI2C
+          - I2C_1
