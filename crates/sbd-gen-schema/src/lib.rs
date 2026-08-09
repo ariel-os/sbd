@@ -7,6 +7,7 @@ use std::collections::BTreeSet;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use serde_with::{KeyValueMap, serde_as};
+use serde_yaml::Value as YamlValue;
 
 use crate::{
     ariel::{Ariel, ArielTargetExt},
@@ -16,6 +17,32 @@ use crate::{
 
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)
+}
+
+/// Documentation metadata embedded in BSP files for use by documentation tooling.
+/// The content is intentionally opaque to sbd-gen; it is processed by external tools.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ArielDoc(YamlValue);
+
+impl Default for ArielDoc {
+    fn default() -> Self {
+        Self(YamlValue::Null)
+    }
+}
+
+impl PartialEq for ArielDoc {
+    fn eq(&self, other: &Self) -> bool {
+        serde_yaml::to_string(&self.0).ok() == serde_yaml::to_string(&other.0).ok()
+    }
+}
+
+impl Eq for ArielDoc {}
+
+impl std::hash::Hash for ArielDoc {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        serde_yaml::to_string(&self.0).ok().hash(state);
+    }
 }
 
 /// Returns the used schema version.
@@ -41,6 +68,7 @@ pub struct SbdFile {
     pub ariel: Option<Ariel>,
     pub riot: Option<Riot>,
     pub description: Option<String>,
+    pub ariel_doc: Option<ArielDoc>,
 }
 
 #[serde_as]
