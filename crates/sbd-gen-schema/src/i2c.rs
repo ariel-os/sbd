@@ -1,5 +1,6 @@
-#![deny(missing_docs)]
 //! I2C related structs of the SBD schema.
+
+#![deny(missing_docs)]
 
 use serde::{Deserialize, Serialize};
 
