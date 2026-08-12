@@ -383,7 +383,6 @@ impl<'a> RenderTarget<'a> {
             // claiming i2C peripheral here
             self.resources.claim(peri, &bus_name)?;
 
-
             let mut aliases_string = String::new();
             for alias in &bus.aliases {
                 aliases_string.push_str(alias);
