@@ -86,7 +86,7 @@ impl Target {
         !self.buttons.is_empty()
     }
 
-    /// Returns true if there are any I2C buses listed for this board.
+    /// Returns true if there are any I2C bus listed for this board.
     #[must_use]
     pub fn has_i2c_bus(&self) -> bool {
         !self.i2c.is_empty()
