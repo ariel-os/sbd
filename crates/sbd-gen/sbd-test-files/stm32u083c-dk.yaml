@@ -22,11 +22,6 @@ targets:
     i2c:
       - scl_pin: PB8
         sda_pin: PB7
-        devices:
-          - type: sensor
-            address: 0x7e
-            part_number: STTS22H
-            description: Temperature Sensor
         possible_peripherals:
           - I2C1
         aliases:
