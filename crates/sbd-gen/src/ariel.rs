@@ -363,7 +363,7 @@ impl<'a> RenderTarget<'a> {
         code.push_str("ariel_os_hal::define_i2c_buses![\n");
 
         for (n, bus) in i2c_buses.iter().enumerate() {
-            let bus_name = format!("i2c{n}");
+            let bus_name = format!("I2c{n}");
 
             self.resources.claim(&bus.sda_pin, &bus_name)?;
             self.resources.claim(&bus.scl_pin, &bus_name)?;
