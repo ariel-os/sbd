@@ -474,8 +474,8 @@ fn test_render_uarts() {
     assert_eq!(
         rendered,
         "ariel_os_hal::define_uarts![
-{ name: uart0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
-{ name: uart1, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
+{ name: Uart0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
+{ name: Uart1, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
 ];
 "
     );
