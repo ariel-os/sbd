@@ -296,7 +296,9 @@ impl<'a> RenderTarget<'a> {
         code.push_str("ariel_os_hal::define_uarts![\n");
 
         for (n, uart) in uarts.iter().enumerate() {
-            let name = format!("uart{n}");
+            // This name is used to generate a type so it needs to
+            // be in UpperCamelCase.
+            let name = format!("Uart{n}");
             {
                 // claim this UART's resources
                 // TODO: "by" could be more specific ("claimed by uart FOO as rx_pin" vs "claimed
