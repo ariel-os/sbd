@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.4.0...sbd-gen-v0.4.1) - 2026-08-25
+
+### Fixed
+
+- move case change to the generated rust code
+- make uart{n} Uart{n}
+
+### Other
+
+- propagate case change
+
 ## [0.4.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.3.1...sbd-gen-v0.4.0) - 2026-07-16
 
 ### Added
