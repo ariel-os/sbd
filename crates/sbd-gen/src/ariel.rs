@@ -167,6 +167,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             if target.has_buttons() {
                 target_builder.provides.insert("has_buttons".into());
             }
+            if target.has_i2c_bus() {
+                target_builder.provides.insert("has_i2c".into());
+            }
             if target.has_host_facing_uart() {
                 target_builder
                     .provides
@@ -244,6 +247,9 @@ impl<'a> RenderTarget<'a> {
             }
             if target.has_buttons() {
                 pins.push_str(&self.render_button_pins()?);
+            }
+            if target.has_i2c_bus() {
+                pins.push_str(&self.render_i2c_buses()?);
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
@@ -347,6 +353,54 @@ impl<'a> RenderTarget<'a> {
 
         Ok(code)
     }
+
+    fn render_i2c_buses(&mut self) -> Result<String> {
+        let i2c_buses = &self.target.i2c;
+        let mut code = String::new();
+
+        // Deferring to a macro so that any actual logic in there is handled in the OS where it
+        // belongs; this merely processes the data into a format usable there.
+        code.push_str("ariel_os_hal::define_i2c_buses![\n");
+
+        for (n, bus) in i2c_buses.iter().enumerate() {
+            let bus_name = format!("i2c{n}");
+
+            self.resources.claim(&bus.sda_pin, &bus_name)?;
+            self.resources.claim(&bus.scl_pin, &bus_name)?;
+
+            let Some(peri) = bus.possible_peripherals.first() else {
+                eprintln!("warning: No peripheral defined for I2C. This bus won't be processed.");
+                eprintln!("Affected I2C: {bus_name:?}");
+                continue;
+            };
+            if bus.possible_peripherals.len() > 1 {
+                eprintln!(
+                    "warning: Multiple peripherals defined for I2C. Only the first will be processed."
+                );
+                eprintln!("Affected I2C: {bus_name:?}");
+            }
+
+            // claiming i2C peripheral here
+            self.resources.claim(peri, &bus_name)?;
+
+            let mut aliases_string = String::new();
+            for alias in &bus.aliases {
+                aliases_string.push_str(alias);
+                aliases_string.push(',');
+            }
+            // Note: the name of the i2c bus is not used directly here because rust requires
+            // type names to be UpperCamelCase.
+            writeln!(
+                code,
+                "{{ name: I2c{}, peripheral: {}, sda: {}, scl: {}, aliases: [{}] }},",
+                n, peri, bus.sda_pin, bus.scl_pin, aliases_string
+            )
+            .unwrap();
+        }
+        code.push_str("];\n");
+
+        Ok(code)
+    }
 }
 
 fn render_target_rs(target: &Target) -> Result<String> {
@@ -435,6 +489,7 @@ pub fn test_default_target() -> Target {
         include: None,
         uarts: vec![],
         quirks: vec![],
+        i2c: vec![],
         riot: sbd_gen_schema::riot::RiotTargetExt::default(),
     }
 }
