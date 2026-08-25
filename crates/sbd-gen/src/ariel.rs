@@ -363,7 +363,7 @@ impl<'a> RenderTarget<'a> {
         code.push_str("ariel_os_hal::define_i2c_buses![\n");
 
         for (n, bus) in i2c_buses.iter().enumerate() {
-            let bus_name = format!("I2c{n}");
+            let bus_name = format!("i2c{n}");
 
             self.resources.claim(&bus.sda_pin, &bus_name)?;
             self.resources.claim(&bus.scl_pin, &bus_name)?;
@@ -388,10 +388,12 @@ impl<'a> RenderTarget<'a> {
                 aliases_string.push_str(alias);
                 aliases_string.push(',');
             }
+            // Note: the name of the i2c bus is not used directly here because rust requires
+            // type names to be UpperCamelCase.
             writeln!(
                 code,
-                "{{ name: {}, peripheral: {}, sda: {}, scl: {}, aliases: [{}] }},",
-                bus_name, peri, bus.sda_pin, bus.scl_pin, aliases_string
+                "{{ name: I2c{}, peripheral: {}, sda: {}, scl: {}, aliases: [{}] }},",
+                n, peri, bus.sda_pin, bus.scl_pin, aliases_string
             )
             .unwrap();
         }
