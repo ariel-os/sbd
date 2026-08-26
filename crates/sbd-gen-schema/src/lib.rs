@@ -69,6 +69,8 @@ pub struct Target {
     pub buttons: Vec<Button>,
     #[serde(default)]
     pub uarts: Vec<Uart>,
+    #[serde(default)]
+    pub spis: Vec<SpiBus>,
 }
 
 impl Target {
@@ -80,6 +82,24 @@ impl Target {
     #[must_use]
     pub fn has_buttons(&self) -> bool {
         !self.buttons.is_empty()
+    }
+
+    #[must_use]
+    pub fn has_spi(&self) -> bool {
+        !self.spis.is_empty()
+    }
+
+    /// Returns true if the board has any peripheral that needs pin definitions rendered.
+    ///
+    /// Kept one-check-per-line (via `rustfmt::skip`) so that adding a new peripheral kind
+    /// produces a distinct, easy-to-review line in diffs.
+    #[must_use]
+    #[rustfmt::skip]
+    pub fn has_any_peripheral(&self) -> bool {
+        self.has_leds()
+            || self.has_buttons()
+            || self.has_spi()
+            || self.has_uarts()
     }
 
     /// Returns true if there are any UARTs listed for this board.
@@ -209,6 +229,30 @@ pub struct Uart {
     /// report debug or measurement data.
     #[serde(default)]
     pub host_facing: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiBus {
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    pub miso: String,
+    pub mosi: String,
+    pub sck: String,
+    #[serde(default)]
+    pub devices: Vec<SpiDevice>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiDevice {
+    #[serde(rename = "type")]
+    pub type_: String,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    pub cs: String,
+    /// Optional interrupt/data-ready line from the device to the MCU.
+    pub drdy: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
