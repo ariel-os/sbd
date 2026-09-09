@@ -1,5 +1,6 @@
 pub mod ariel;
 pub mod common;
+pub mod led;
 pub mod riot;
 
 use std::collections::BTreeSet;
@@ -14,6 +15,8 @@ use crate::{
     riot::{Riot, RiotTargetExt},
 };
 
+pub use led::{DuocolorLed, Led, MonocolorLed, PentacolorLed, TetracolorLed, TricolorLed};
+
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)
 }
@@ -26,7 +29,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 4, 0)
+    semver::Version::new(0, 4, 2)
 }
 
 #[serde_as]
@@ -69,6 +72,8 @@ pub struct Target {
     pub buttons: Vec<Button>,
     #[serde(default)]
     pub uarts: Vec<Uart>,
+    #[serde(default)]
+    pub pixels: Vec<Pixel>,
 }
 
 impl Target {
@@ -94,16 +99,11 @@ impl Target {
     pub fn has_host_facing_uart(&self) -> bool {
         self.uarts.iter().any(|u| u.host_facing)
     }
-}
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Led {
-    pub pin: String,
-    pub color: Option<String>,
-    pub active: Option<PinActive>,
-    #[serde(default)]
-    pub aliases: Vec<String>,
+    #[must_use]
+    pub fn has_pixels(&self) -> bool {
+        !self.pixels.is_empty()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -111,6 +111,23 @@ pub struct Led {
 pub struct Button {
     pub pin: String,
     pub active: Option<PinActive>,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+}
+
+/// Smart Pixels, Neo or RGB LED.
+///
+/// This represent LED ICs that are connected to the MCU using a single wire
+/// and a serial protocol such as WS2812B.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Pixel {
+    /// Pin.
+    pub pin: String,
+    /// Specific protocol that the smart pixel uses.
+    pub protocol: Option<String>,
+    /// Number of chained pixels
+    pub size: u64,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
