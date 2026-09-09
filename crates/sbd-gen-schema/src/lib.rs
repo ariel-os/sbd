@@ -1,5 +1,6 @@
 pub mod ariel;
 pub mod common;
+pub mod i2c;
 pub mod riot;
 
 use std::collections::BTreeSet;
@@ -11,6 +12,7 @@ use serde_with::{KeyValueMap, serde_as};
 use crate::{
     ariel::{Ariel, ArielTargetExt},
     common::StringOrVecString,
+    i2c::I2cBus,
     riot::{Riot, RiotTargetExt},
 };
 
@@ -26,7 +28,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 4, 0)
+    semver::Version::new(0, 4, 1)
 }
 
 #[serde_as]
@@ -68,6 +70,8 @@ pub struct Target {
     #[serde(default)]
     pub buttons: Vec<Button>,
     #[serde(default)]
+    pub i2c: Vec<I2cBus>,
+    #[serde(default)]
     pub uarts: Vec<Uart>,
 }
 
@@ -80,6 +84,12 @@ impl Target {
     #[must_use]
     pub fn has_buttons(&self) -> bool {
         !self.buttons.is_empty()
+    }
+
+    /// Returns true if there are any I2C bus listed for this board.
+    #[must_use]
+    pub fn has_i2c_bus(&self) -> bool {
+        !self.i2c.is_empty()
     }
 
     /// Returns true if there are any UARTs listed for this board.
