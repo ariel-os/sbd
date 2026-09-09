@@ -1,0 +1,51 @@
+version: 0.4.1
+description: sbd test file for LED variants
+targets:
+  board-with-lots-of-leds:
+    chip: nrf52840
+    leds:
+      # Monocolor LED
+      - pin: P0_13
+        color: green
+        active: low
+      # Duocolor LED
+      - pins:
+        - P0_14
+        - P0_15
+        colors:
+          - red
+          - green
+        active: low
+      # Tricolor LED
+      - pins:
+        - P0_16
+        - P0_17
+        - P0_18
+        colors:
+        - red
+        - green
+        - blue
+      # Tetracolor LED
+      - pins:
+        - P0_19
+        - P0_20
+        - P0_21
+        - P0_22
+        colors:
+        - red
+        - green
+        - blue
+        - amber
+      # Pentacolor LED
+      - pins:
+        - P0_23
+        - P0_24
+        - P0_25
+        - P0_26
+        - P0_27
+        colors:
+        - red
+        - green
+        - blue
+        - warm white
+        - cool whit
