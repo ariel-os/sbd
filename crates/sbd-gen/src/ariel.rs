@@ -333,10 +333,12 @@ impl<'a> RenderTarget<'a> {
 
             // Deferring to a macro so that any actual logic in there is handled in the OS where it
             // belongs; this merely processes the data into a format usable there.
+            // Note: the name of the uart is not used because rust requires type names to
+            // be UpperCamelCase.
             writeln!(
                 code,
-                "{{ name: {}, device: {}, tx: {}, rx: {}, host_facing: {} }},",
-                name, device, uart.tx_pin, uart.rx_pin, uart.host_facing
+                "{{ name: Uart{}, device: {}, tx: {}, rx: {}, host_facing: {} }},",
+                n, device, uart.tx_pin, uart.rx_pin, uart.host_facing
             )
             .unwrap();
         }
@@ -472,8 +474,8 @@ fn test_render_uarts() {
     assert_eq!(
         rendered,
         "ariel_os_hal::define_uarts![
-{ name: uart0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
-{ name: uart1, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
+{ name: Uart0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
+{ name: Uart1, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
 ];
 "
     );
