@@ -13,6 +13,7 @@ include = ["src/**/*", "LICENSE-*"]
 semver = { version = "1.0.28", features = ["serde"] }
 serde = { workspace = true }
 serde_with = { workspace = true }
+serde_yaml = { workspace = true }
 
 [lints]
 workspace = true

@@ -555,6 +555,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_with",
+ "serde_yaml",
 ]
 
 [[package]]
