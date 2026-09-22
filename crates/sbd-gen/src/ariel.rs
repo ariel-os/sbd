@@ -259,7 +259,7 @@ impl<'a> RenderTarget<'a> {
         let leds = &self.target.leds;
         let mut leds_rs = String::new();
 
-        leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
+        leds_rs.push_str("ariel_os_hal::define_peripherals!(MonocolorLedPeripherals {\n");
 
         for (n, led) in leds.iter().enumerate() {
             let name = format!("led{n}");
