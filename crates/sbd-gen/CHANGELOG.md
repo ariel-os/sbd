@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.4.0...sbd-gen-v0.5.0) - 2026-09-28
+
+### Added
+
+- *(i2c)* add tests for i2c
+- *(i2c)* add i2c bus generation for Ariel OS
+
+### Fixed
+
+- move case change to the generated rust code
+- make uart{n} Uart{n}
+
+### Other
+
+- propagate case change
+
 ## [0.4.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.3.1...sbd-gen-v0.4.0) - 2026-07-16
 
 ### Added
