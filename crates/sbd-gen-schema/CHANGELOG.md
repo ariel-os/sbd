@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/ariel-os/sbd/compare/sbd-gen-schema-v0.5.0...sbd-gen-schema-v0.6.0) - 2026-09-28
+
+### Added
+
+- *(i2c)* add I2C in the schema
+
 ## [0.5.0](https://github.com/ariel-os/sbd/compare/sbd-gen-schema-v0.4.0...sbd-gen-schema-v0.5.0) - 2026-07-16
 
 ### Added
