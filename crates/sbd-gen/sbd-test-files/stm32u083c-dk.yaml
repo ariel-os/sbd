@@ -1,4 +1,4 @@
-version: 0.4.1
+version: 0.5.0
 targets:
   stm32u083c-dk:
     chip: stm32u083mc
@@ -16,9 +16,10 @@ targets:
       # led2
       - pin: PB2
         color: red
-    buttons:
+    switches:
       # button0
-      - pin: PC2
+      - outputs: PC2
+        resistors: pullup
     i2c:
       - scl_pin: PB8
         sda_pin: PB7
