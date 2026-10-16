@@ -239,7 +239,8 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_switches() || target.has_uarts() || target.has_i2c_bus() {
+        if target.has_leds() || target.has_switches() || target.has_uarts() || target.has_i2c_bus()
+        {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }

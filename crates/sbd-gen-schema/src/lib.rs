@@ -11,8 +11,8 @@ use serde_with::{KeyValueMap, serde_as};
 
 use crate::{
     ariel::{Ariel, ArielTargetExt},
-    i2c::I2cBus,
     common::{StringOrVecString, TOrVecT},
+    i2c::I2cBus,
     riot::{Riot, RiotTargetExt},
 };
 
