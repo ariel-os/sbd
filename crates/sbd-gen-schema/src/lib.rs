@@ -1,6 +1,7 @@
 pub mod ariel;
 pub mod common;
 pub mod i2c;
+pub mod led;
 pub mod riot;
 
 use std::collections::BTreeSet;
@@ -16,6 +17,8 @@ use crate::{
     riot::{Riot, RiotTargetExt},
 };
 
+pub use led::{DuocolorLed, Led, MonocolorLed, PentacolorLed, TetracolorLed, TricolorLed};
+
 const fn default_version() -> Version {
     semver::Version::new(0, 2, 0)
 }
@@ -28,7 +31,7 @@ const fn default_version() -> Version {
 /// In both cases, the schema version must be updated accordingly.
 #[must_use]
 pub const fn schema_version() -> Version {
-    semver::Version::new(0, 4, 1)
+    semver::Version::new(0, 4, 2)
 }
 
 #[serde_as]
@@ -104,16 +107,6 @@ impl Target {
     pub fn has_host_facing_uart(&self) -> bool {
         self.uarts.iter().any(|u| u.host_facing)
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Led {
-    pub pin: String,
-    pub color: Option<String>,
-    pub active: Option<PinActive>,
-    #[serde(default)]
-    pub aliases: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
