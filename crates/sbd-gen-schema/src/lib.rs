@@ -124,7 +124,7 @@ pub struct Led {
 #[serde(deny_unknown_fields)]
 pub struct Switch {
     /// Pins that are connected to the outputs of the switch
-    pub outputs: StringOrVecString,
+    pub pins: StringOrVecString,
     /// Resistors defining the state of the outputs when they are 'open'.
     pub resistors: Option<TOrVecT<PullResistor>>,
     /// Number of stable states, should be between 1 and ``outputs.len()`` + 1
