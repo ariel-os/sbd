@@ -1,0 +1,30 @@
+version: 0.5.0
+targets:
+  many-switches:
+    chip: stm32u083mc
+    switches:
+      # Push Button
+      - pins: P01
+        resistors: pullup
+      # Jumper cable with 2 output pins
+      - pins:
+          - P02
+          - P03
+        # active:
+        #   - high
+        #   - low
+        aliases:
+          - JP1
+      # Stack of 3 dip switches
+      - pins:
+          - P04
+          - P05
+          - P06
+        resistors:
+          - pullup
+          - pulldown
+          - none
+        # active:
+        #   - low
+        #   - high
+        #   - high

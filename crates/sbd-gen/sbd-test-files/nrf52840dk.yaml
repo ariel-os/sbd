@@ -18,11 +18,11 @@ targets:
         color: green
 
     switches:
-      - outputs: P0_11
+      - pins: P0_11
         resistors: pullup
-      - outputs: P0_12
+      - pins: P0_12
         resistors: pullup
-      - outputs: P0_24
+      - pins: P0_24
         resistors: pullup
-      - outputs: P0_25
+      - pins: P0_25
         resistors: pullup

@@ -18,7 +18,7 @@ targets:
         color: red
     switches:
       # button0
-      - outputs: PC2
+      - pins: PC2
         resistors: pullup
     i2c:
       - scl_pin: PB8
