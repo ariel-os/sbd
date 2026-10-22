@@ -127,6 +127,8 @@ pub struct Switch {
     pub pins: StringOrVecString,
     /// Resistors defining the state of the outputs when they are 'open'.
     pub resistors: Option<TOrVecT<PullResistor>>,
+    /// Active state of the pins, needed when no resistors are specified.
+    pub active: Option<TOrVecT<PinActive>>,
     /// Number of stable states, should be between 1 and `outputs.len()` + 1
     pub stability: Option<u64>,
     #[serde(default)]
@@ -140,8 +142,6 @@ pub enum PullResistor {
     PullUp,
     #[serde(rename = "pulldown")]
     PullDown,
-    #[serde(rename = "unknown")]
-    Unknown,
     #[serde(rename = "none")]
     None,
 }
