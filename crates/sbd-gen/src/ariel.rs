@@ -17,7 +17,10 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target, common::{StringOrVecString, TOrVecT}};
+use sbd_gen_schema::{
+    PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target,
+    common::{StringOrVecString, TOrVecT},
+};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -300,20 +303,23 @@ impl<'a> RenderTarget<'a> {
 
             match &switch.resistors {
                 None => {
-                    pull_resistors = core::iter::repeat_n(String::from("None"), all_pins.len()).collect();
+                    pull_resistors =
+                        core::iter::repeat_n(String::from("None"), all_pins.len()).collect();
                 }
                 Some(TOrVecT::T(r)) => {
-                    pull_resistors.push(
-                        write_ariel_pull(r)
-                    );
-                },
+                    pull_resistors.push(write_ariel_pull(r));
+                }
                 Some(TOrVecT::VecT(v)) => {
                     pull_resistors.extend(v.iter().map(write_ariel_pull));
                 }
             }
 
             // FIXME: do that during the parsing somehow ?
-            assert_eq!(all_pins.len(), pull_resistors.len(), "All or none of the pins must have their Pull resistors specified");
+            assert_eq!(
+                all_pins.len(),
+                pull_resistors.len(),
+                "All or none of the pins must have their Pull resistors specified"
+            );
 
             let mut pins_and_pulls_string = String::new();
             for (pin, pull) in all_pins.iter().zip(pull_resistors) {
@@ -517,8 +523,6 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
     init_body.push_str(&code);
 }
 
-
-
 fn write_ariel_pull(res: &PullResistor) -> String {
     match res {
         PullResistor::PullDown => String::from("Down"),
@@ -526,8 +530,6 @@ fn write_ariel_pull(res: &PullResistor) -> String {
         PullResistor::None => String::from("None"),
     }
 }
-
-
 
 #[cfg(test)]
 #[must_use]
