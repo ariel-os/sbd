@@ -17,7 +17,7 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
+use sbd_gen_schema::{PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target, common::{StringOrVecString, TOrVecT}};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -280,26 +280,59 @@ impl<'a> RenderTarget<'a> {
     fn render_switches_pins(&mut self) -> Result<String> {
         let switches = &self.target.switches;
         let mut switches_rs = String::new();
-
-        switches_rs.push_str("ariel_os_hal::define_peripherals!(SwitchPeripherals {\n");
-
+        switches_rs.push_str("ariel_os_hal::define_switches![\n");
         for (n, switch) in switches.iter().enumerate() {
             let name = format!("switch{n}");
-            match &switch.outputs {
+            let mut all_pins: Vec<String> = vec![];
+            let mut pull_resistors = vec![];
+            match &switch.pins {
                 StringOrVecString::String(pin) => {
                     self.resources.claim(pin, &name)?;
-                    let _ = writeln!(switches_rs, "{name}: {pin},");
+                    all_pins.push(pin.clone());
                 }
                 StringOrVecString::VecString(pins) => {
-                    for (i, pin) in pins.iter().enumerate() {
+                    for pin in pins {
                         self.resources.claim(pin, &name)?;
-                        let _ = writeln!(switches_rs, "{name}_{i}: {pin},");
+                        all_pins.push(pin.clone());
                     }
                 }
             }
+
+            match &switch.resistors {
+                None => {
+                    pull_resistors = core::iter::repeat_n(String::from("None"), all_pins.len()).collect();
+                }
+                Some(TOrVecT::T(r)) => {
+                    pull_resistors.push(
+                        write_ariel_pull(r)
+                    );
+                },
+                Some(TOrVecT::VecT(v)) => {
+                    pull_resistors.extend(v.iter().map(write_ariel_pull));
+                }
+            }
+
+            // FIXME: do that during the parsing somehow ?
+            assert_eq!(all_pins.len(), pull_resistors.len(), "All or none of the pins must have their Pull resistors specified");
+
+            let mut pins_and_pulls_string = String::new();
+            for (pin, pull) in all_pins.iter().zip(pull_resistors) {
+                write!(pins_and_pulls_string, "pin: {pin}, pull: {pull},").unwrap();
+            }
+
+            let mut aliases_string = String::new();
+            for alias in &switch.aliases {
+                aliases_string.push_str(alias);
+                aliases_string.push(',');
+            }
+
+            writeln!(
+                switches_rs,
+                "{{ name: Switch{n}, pins: [{pins_and_pulls_string}], aliases: [{aliases_string}] }},",
+            ).unwrap();
         }
 
-        switches_rs.push_str("});\n");
+        switches_rs.push_str("];\n");
 
         Ok(switches_rs)
     }
@@ -483,6 +516,18 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
 
     init_body.push_str(&code);
 }
+
+
+
+fn write_ariel_pull(res: &PullResistor) -> String {
+    match res {
+        PullResistor::PullDown => String::from("Down"),
+        PullResistor::PullUp => String::from("Up"),
+        PullResistor::None => String::from("None"),
+    }
+}
+
+
 
 #[cfg(test)]
 #[must_use]
