@@ -129,8 +129,6 @@ pub struct Switch {
     pub resistors: Option<TOrVecT<PullResistor>>,
     /// Number of stable states, should be between 1 and `outputs.len()` + 1
     pub stability: Option<u64>,
-    /// Description of the physical form of the switch and how to interact with it
-    pub description: Option<String>,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
