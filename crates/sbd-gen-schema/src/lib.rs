@@ -119,7 +119,6 @@ pub struct Led {
 /// A Switch in the electrical sense regardless of their physical form.
 ///
 /// This includes buttons, jumper switches, dip switches etc.
-/// For buttons, their are no expectations in the number of stable outputs.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Switch {
@@ -129,8 +128,6 @@ pub struct Switch {
     pub resistors: Option<TOrVecT<PullResistor>>,
     /// Active state of the pins, needed when no resistors are specified.
     pub active: Option<TOrVecT<PinActive>>,
-    /// Number of stable states, should be between 1 and `outputs.len()` + 1
-    pub stability: Option<u64>,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
