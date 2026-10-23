@@ -122,12 +122,12 @@ pub struct Led {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Switch {
-    /// Pins that are connected to the outputs of the switch
+    /// Pins that are connected to the throws of the switch
     pub pins: StringOrVecString,
     /// Resistors defining the state of the outputs when they are 'open'.
-    pub resistors: Option<TOrVecT<PullResistor>>,
-    /// Active state of the pins, needed when no resistors are specified.
-    pub active: Option<TOrVecT<PinActive>>,
+    pub resistors: TOrVecT<PullResistor>,
+    /// Active state of the pins, i.e. state when the corresponding part of the circuit is closed.
+    pub active: TOrVecT<PinActive>,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
