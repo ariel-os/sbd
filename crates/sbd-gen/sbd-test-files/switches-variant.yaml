@@ -7,7 +7,11 @@ targets:
       - pins: P01
         resistors: pullup
         active: low
-      # Jumper switch with 2 output pins.
+      # SPST toggle switch
+      - pins: P07
+        resistors: none
+        active: high
+      # Single jumper with two positions.
       - pins:
           - P02
           - P03
