@@ -573,7 +573,7 @@ fn to_ariel_pull(res: &PullResistor) -> String {
 fn to_ariel_level(res: &PinActive) -> String {
     match res {
         PinActive::High => String::from("High"),
-        PinActive::Low => String::from("Up"),
+        PinActive::Low => String::from("Low"),
     }
 }
 
