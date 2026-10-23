@@ -18,8 +18,7 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target,
-    common::{StringOrVecString, TOrVecT},
+    PinActive, PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target, common::{StringOrVecString, TOrVecT},
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -288,6 +287,8 @@ impl<'a> RenderTarget<'a> {
             let name = format!("switch{n}");
             let mut all_pins: Vec<String> = vec![];
             let mut pull_resistors = vec![];
+            let mut activity_level = vec![];
+
             match &switch.pins {
                 StringOrVecString::String(pin) => {
                     self.resources.claim(pin, &name)?;
@@ -301,29 +302,63 @@ impl<'a> RenderTarget<'a> {
                 }
             }
 
-            match &switch.resistors {
-                None => {
-                    pull_resistors =
-                        core::iter::repeat_n(String::from("None"), all_pins.len()).collect();
+            // Declared resistors and active levels need to stay consistent.
+            match (&switch.resistors, &switch.active) {
+                (None, None) => {
+                    return Err(anyhow!(
+                        "One of `resistors` or `active needs to be specified"
+                    ));
+                },
+                (Some(TOrVecT::T(_)), Some(TOrVecT::VecT(_))) | (Some(TOrVecT::VecT(_)), Some(TOrVecT::T(_))) => {
+                    return Err(anyhow!(
+                        "`resistors` and `active need to either be unset or be specified for every pin"
+                    ));
                 }
-                Some(TOrVecT::T(r)) => {
-                    pull_resistors.push(write_ariel_pull(r));
+                (None, Some(TOrVecT::T(l))) => {
+                    pull_resistors = vec!["None".to_string()];
+                    activity_level = vec![to_ariel_level(l)];
                 }
-                Some(TOrVecT::VecT(v)) => {
-                    pull_resistors.extend(v.iter().map(write_ariel_pull));
+                (None, Some(TOrVecT::VecT(levels))) => {
+                    pull_resistors = core::iter::repeat_n("None".to_string(), levels.len()).collect();
+                    activity_level.extend(levels.iter().map(to_ariel_level));
+                }
+                (Some(TOrVecT::T(r)), Some(TOrVecT::T(l))) => {
+                    pull_resistors = vec![to_ariel_pull(r)];
+                    activity_level = vec![to_ariel_level(l)];
+                }
+                (Some(TOrVecT::T(r)), None) => {
+                    pull_resistors = vec![to_ariel_pull(r)];
+                    activity_level = vec!["None".to_string()];
+                }
+                (Some(TOrVecT::VecT(res)), None) => {
+                    pull_resistors.extend(res.iter().map(to_ariel_pull));
+                    activity_level = core::iter::repeat_n("None".to_string(), res.len()).collect();
+                }
+                (Some(TOrVecT::VecT(res)), Some(TOrVecT::VecT(levels))) => {
+                    if res.len() != levels.len() {
+                        return Err(
+                            anyhow!("`resistors` and `active need to either be unset or be specified for every pin")
+                        );
+                    }
+                    pull_resistors.extend(res.iter().map(to_ariel_pull));
+                    activity_level.extend(levels.iter().map(to_ariel_level));
                 }
             }
 
             // FIXME: do that during the parsing somehow ?
-            assert_eq!(
-                all_pins.len(),
-                pull_resistors.len(),
-                "All or none of the pins must have their Pull resistors specified"
+            assert!(
+                all_pins.len() == pull_resistors.len() && all_pins.len() == activity_level.len(),
+                "All or none of the pins must have their Pull resistors/activity level specified"
             );
 
-            let mut pins_and_pulls_string = String::new();
-            for (pin, pull) in all_pins.iter().zip(pull_resistors) {
-                write!(pins_and_pulls_string, "pin: {pin}, pull: {pull},").unwrap();
+            let mut pins_string = String::new();
+            for ((pin, pull), active) in all_pins.iter().zip(pull_resistors).zip(activity_level) {
+                if (pull == "Up" && active == "High") || (pull == "Down" && active == "Low") {
+                    return Err(
+                        anyhow!("Conflict between the pull resitor and activity level for pin {pin}")
+                    );
+                }
+                write!(pins_string, "pin: {pin}, pull: {pull}, active: {active}").unwrap();
             }
 
             let mut aliases_string = String::new();
@@ -334,7 +369,7 @@ impl<'a> RenderTarget<'a> {
 
             writeln!(
                 switches_rs,
-                "{{ name: Switch{n}, pins: [{pins_and_pulls_string}], aliases: [{aliases_string}] }},",
+                "{{ name: Switch{n}, pins: [{pins_string}], aliases: [{aliases_string}] }},",
             ).unwrap();
         }
 
@@ -523,11 +558,18 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
     init_body.push_str(&code);
 }
 
-fn write_ariel_pull(res: &PullResistor) -> String {
+fn to_ariel_pull(res: &PullResistor) -> String {
     match res {
         PullResistor::PullDown => String::from("Down"),
         PullResistor::PullUp => String::from("Up"),
         PullResistor::None => String::from("None"),
+    }
+}
+
+fn to_ariel_level(res: &PinActive) -> String {
+    match res {
+        PinActive::High => String::from("High"),
+        PinActive::Low => String::from("Up"),
     }
 }
 
