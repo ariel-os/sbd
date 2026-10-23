@@ -20,9 +20,13 @@ targets:
     switches:
       - pins: P0_11
         resistors: pullup
+        active: low
       - pins: P0_12
-        resistors: pullup
+        resistors: none
+        active: low
       - pins: P0_24
-        resistors: pullup
+        resistors: none
+        active: low
       - pins: P0_25
-        resistors: pullup
+        resistors: none
+        active: low

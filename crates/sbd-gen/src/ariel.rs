@@ -305,42 +305,19 @@ impl<'a> RenderTarget<'a> {
 
             // Declared resistors and active levels need to stay consistent.
             match (&switch.resistors, &switch.active) {
-                (None, None) => {
+                (TOrVecT::T(_), TOrVecT::VecT(_)) | (TOrVecT::VecT(_), TOrVecT::T(_)) => {
                     return Err(anyhow!(
-                        "One of `resistors` or `active needs to be specified"
+                        "`resistors` and `active need to be specified for every pin"
                     ));
                 }
-                (Some(TOrVecT::T(_)), Some(TOrVecT::VecT(_)))
-                | (Some(TOrVecT::VecT(_)), Some(TOrVecT::T(_))) => {
-                    return Err(anyhow!(
-                        "`resistors` and `active need to either be unset or be specified for every pin"
-                    ));
-                }
-                (None, Some(TOrVecT::T(l))) => {
-                    pull_resistors = vec!["None".to_string()];
-                    activity_level = vec![to_ariel_level(l)];
-                }
-                (None, Some(TOrVecT::VecT(levels))) => {
-                    pull_resistors =
-                        core::iter::repeat_n("None".to_string(), levels.len()).collect();
-                    activity_level.extend(levels.iter().map(to_ariel_level));
-                }
-                (Some(TOrVecT::T(r)), Some(TOrVecT::T(l))) => {
+                (TOrVecT::T(r), TOrVecT::T(l)) => {
                     pull_resistors = vec![to_ariel_pull(r)];
                     activity_level = vec![to_ariel_level(l)];
                 }
-                (Some(TOrVecT::T(r)), None) => {
-                    pull_resistors = vec![to_ariel_pull(r)];
-                    activity_level = vec!["None".to_string()];
-                }
-                (Some(TOrVecT::VecT(res)), None) => {
-                    pull_resistors.extend(res.iter().map(to_ariel_pull));
-                    activity_level = core::iter::repeat_n("None".to_string(), res.len()).collect();
-                }
-                (Some(TOrVecT::VecT(res)), Some(TOrVecT::VecT(levels))) => {
+                (TOrVecT::VecT(res), TOrVecT::VecT(levels)) => {
                     if res.len() != levels.len() {
                         return Err(anyhow!(
-                            "`resistors` and `active need to either be unset or be specified for every pin"
+                            "`resistors` and `active need to be specified for every pin"
                         ));
                     }
                     pull_resistors.extend(res.iter().map(to_ariel_pull));
@@ -349,10 +326,11 @@ impl<'a> RenderTarget<'a> {
             }
 
             // FIXME: do that during the parsing somehow ?
-            assert!(
-                all_pins.len() == pull_resistors.len() && all_pins.len() == activity_level.len(),
-                "All or none of the pins must have their Pull resistors/activity level specified"
-            );
+            if all_pins.len() != pull_resistors.len() || all_pins.len() != activity_level.len() {
+                return Err(anyhow!(
+                    "All of the pins must have their Pull resistors/activity level specified"
+                ));
+            }
 
             let mut pins_string = String::new();
             for ((pin, pull), active) in all_pins.iter().zip(pull_resistors).zip(activity_level) {
@@ -637,4 +615,71 @@ fn test_render_uarts() {
 ];
 "
     );
+}
+
+#[test]
+fn test_render_switches_failure_conflict_resistor_active_level() {
+    use sbd_gen_schema::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::String("P0".to_string()),
+        resistors: TOrVecT::T(PullResistor::PullDown),
+        active: TOrVecT::T(PinActive::Low),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches_pins().is_err());
+}
+
+#[test]
+fn test_render_switches_failure_pins_length_mismatch() {
+    use sbd_gen_schema::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::VecString(vec!["P0".to_string(), "P1".to_string()]),
+        resistors: TOrVecT::T(PullResistor::PullUp),
+        active: TOrVecT::T(PinActive::Low),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches_pins().is_err());
+}
+
+#[test]
+fn test_render_switches_failure_resistors_length_mismatch() {
+    use sbd_gen_schema::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::VecString(vec![
+            "P0".to_string(),
+            "P1".to_string(),
+            "P2".to_string(),
+        ]),
+        resistors: TOrVecT::VecT(vec![PullResistor::PullUp, PullResistor::None]),
+        active: TOrVecT::VecT(vec![PinActive::Low, PinActive::Low, PinActive::Low]),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches_pins().is_err());
 }

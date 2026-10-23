@@ -6,6 +6,7 @@ targets:
       # Push Button
       - pins: P01
         resistors: pullup
+        active: low
       # Jumper switch with 2 output pins.
       - pins:
           - P02
@@ -13,6 +14,9 @@ targets:
         active:
           - high
           - low
+        resistors:
+          - pulldown
+          - none
         aliases:
           - JP1
       # 3 Row DIP switch.
