@@ -358,7 +358,7 @@ impl<'a> RenderTarget<'a> {
                         anyhow!("Conflict between the pull resitor and activity level for pin {pin}")
                     );
                 }
-                write!(pins_string, "pin: {pin}, pull: {pull}, active: {active}").unwrap();
+                write!(pins_string, "pin: {pin}, pull: {pull}, active: {active},").unwrap();
             }
 
             let mut aliases_string = String::new();
