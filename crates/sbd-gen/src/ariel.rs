@@ -344,7 +344,7 @@ impl<'a> RenderTarget<'a> {
 
             let mut aliases_string = String::new();
             for alias in &switch.aliases {
-                aliases_string.push_str(alias);
+                aliases_string.push_str(&alias.replace(' ', "_"));
                 aliases_string.push(',');
             }
 
