@@ -20,3 +20,24 @@ impl StringOrVecString {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[serde(untagged)]
+pub enum TOrVecT<T> {
+    T(T),
+    VecT(Vec<T>),
+}
+
+impl<T: Clone> TOrVecT<T> {
+    pub fn push(&mut self, s: T) {
+        match self {
+            TOrVecT::T(s1) => {
+                let v = vec![s1.clone(), s];
+                *self = TOrVecT::VecT(v);
+            }
+            TOrVecT::VecT(v) => {
+                v.push(s);
+            }
+        }
+    }
+}

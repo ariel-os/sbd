@@ -17,7 +17,10 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
+use sbd_gen_schema::{
+    PinActive, PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target,
+    common::{StringOrVecString, TOrVecT},
+};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -164,8 +167,8 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             if target.has_leds() {
                 target_builder.provides.insert("has_leds".into());
             }
-            if target.has_buttons() {
-                target_builder.provides.insert("has_buttons".into());
+            if target.has_switches() {
+                target_builder.provides.insert("has_switches".into());
             }
             if target.has_i2c_bus() {
                 target_builder.provides.insert("has_i2c_bus".into());
@@ -241,12 +244,13 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_buttons() || target.has_uarts() || target.has_i2c_bus() {
+        if target.has_leds() || target.has_switches() || target.has_uarts() || target.has_i2c_bus()
+        {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }
-            if target.has_buttons() {
-                pins.push_str(&self.render_button_pins()?);
+            if target.has_switches() {
+                pins.push_str(&self.render_switches_pins()?);
             }
             if target.has_i2c_bus() {
                 pins.push_str(&self.render_i2c_buses()?);
@@ -278,21 +282,84 @@ impl<'a> RenderTarget<'a> {
         Ok(leds_rs)
     }
 
-    fn render_button_pins(&mut self) -> Result<String> {
-        let buttons = &self.target.buttons;
-        let mut buttons_rs = String::new();
+    fn render_switches_pins(&mut self) -> Result<String> {
+        let switches = &self.target.switches;
+        let mut switches_rs = String::new();
+        switches_rs.push_str("ariel_os_hal::define_switches![\n");
+        for (n, switch) in switches.iter().enumerate() {
+            let name = format!("switch{n}");
+            let mut all_pins: Vec<String> = vec![];
+            let mut pull_resistors = vec![];
+            let mut activity_level = vec![];
 
-        buttons_rs.push_str("ariel_os_hal::define_peripherals!(ButtonPeripherals {\n");
+            match &switch.pins {
+                StringOrVecString::String(pin) => {
+                    self.resources.claim(pin, &name)?;
+                    all_pins.push(pin.clone());
+                }
+                StringOrVecString::VecString(pins) => {
+                    for pin in pins {
+                        self.resources.claim(pin, &name)?;
+                        all_pins.push(pin.clone());
+                    }
+                }
+            }
 
-        for (n, button) in buttons.iter().enumerate() {
-            let name = format!("button{n}");
-            self.resources.claim(&button.pin, &name)?;
-            let _ = writeln!(buttons_rs, "{}: {},", name, button.pin);
+            // Declared resistors and active levels need to stay consistent.
+            match (&switch.resistors, &switch.active) {
+                (TOrVecT::T(_), TOrVecT::VecT(_)) | (TOrVecT::VecT(_), TOrVecT::T(_)) => {
+                    return Err(anyhow!(
+                        "`resistors` and `active need to be specified for every pin"
+                    ));
+                }
+                (TOrVecT::T(r), TOrVecT::T(l)) => {
+                    pull_resistors = vec![to_ariel_pull(r)];
+                    activity_level = vec![to_ariel_level(l)];
+                }
+                (TOrVecT::VecT(res), TOrVecT::VecT(levels)) => {
+                    if res.len() != levels.len() {
+                        return Err(anyhow!(
+                            "`resistors` and `active need to be specified for every pin"
+                        ));
+                    }
+                    pull_resistors.extend(res.iter().map(to_ariel_pull));
+                    activity_level.extend(levels.iter().map(to_ariel_level));
+                }
+            }
+
+            // FIXME: do that during the parsing somehow ?
+            if all_pins.len() != pull_resistors.len() || all_pins.len() != activity_level.len() {
+                return Err(anyhow!(
+                    "All of the pins must have their Pull resistors/activity level specified"
+                ));
+            }
+
+            let mut pins_string = String::new();
+            for ((pin, pull), active) in all_pins.iter().zip(pull_resistors).zip(activity_level) {
+                if (pull == "Up" && active == "High") || (pull == "Down" && active == "Low") {
+                    return Err(anyhow!(
+                        "Conflict between the pull resitor and activity level for pin {pin}"
+                    ));
+                }
+                write!(pins_string, "pin: {pin}, pull: {pull}, active: {active},").unwrap();
+            }
+
+            let mut aliases_string = String::new();
+            for alias in &switch.aliases {
+                aliases_string.push_str(&alias.replace(' ', "_"));
+                aliases_string.push(',');
+            }
+
+            writeln!(
+                switches_rs,
+                "{{ name: Switch{n}, pins: [{pins_string}], aliases: [{aliases_string}] }},",
+            )
+            .unwrap();
         }
 
-        buttons_rs.push_str("});\n");
+        switches_rs.push_str("];\n");
 
-        Ok(buttons_rs)
+        Ok(switches_rs)
     }
 
     fn render_uarts(&mut self) -> Result<String> {
@@ -474,13 +541,28 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
     init_body.push_str(&code);
 }
 
+fn to_ariel_pull(res: &PullResistor) -> String {
+    match res {
+        PullResistor::PullDown => String::from("Down"),
+        PullResistor::PullUp => String::from("Up"),
+        PullResistor::None => String::from("None"),
+    }
+}
+
+fn to_ariel_level(res: &PinActive) -> String {
+    match res {
+        PinActive::High => String::from("High"),
+        PinActive::Low => String::from("Low"),
+    }
+}
+
 #[cfg(test)]
 #[must_use]
 pub fn test_default_target() -> Target {
     Target {
         name: "test-target".to_string(),
         ariel: sbd_gen_schema::ariel::ArielTargetExt::default(),
-        buttons: vec![],
+        switches: vec![],
         chip: "test-chip".to_string(),
         debugger: None,
         description: None,
@@ -534,4 +616,71 @@ fn test_render_uarts() {
 ];
 "
     );
+}
+
+#[test]
+fn test_render_switches_failure_conflict_resistor_active_level() {
+    use sbd_gen_schema::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::String("P0".to_string()),
+        resistors: TOrVecT::T(PullResistor::PullDown),
+        active: TOrVecT::T(PinActive::Low),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches_pins().is_err());
+}
+
+#[test]
+fn test_render_switches_failure_pins_length_mismatch() {
+    use sbd_gen_schema::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::VecString(vec!["P0".to_string(), "P1".to_string()]),
+        resistors: TOrVecT::T(PullResistor::PullUp),
+        active: TOrVecT::T(PinActive::Low),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches_pins().is_err());
+}
+
+#[test]
+fn test_render_switches_failure_resistors_length_mismatch() {
+    use sbd_gen_schema::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::VecString(vec![
+            "P0".to_string(),
+            "P1".to_string(),
+            "P2".to_string(),
+        ]),
+        resistors: TOrVecT::VecT(vec![PullResistor::PullUp, PullResistor::None]),
+        active: TOrVecT::VecT(vec![PinActive::Low, PinActive::Low, PinActive::Low]),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches_pins().is_err());
 }
