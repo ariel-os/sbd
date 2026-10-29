@@ -4,7 +4,7 @@ expression: ariel
 ---
 FileMap {
     map: {
-        "Cargo.toml": "# @generated\n\n[package]\nname = \"ariel-os-boards\"\n\n[package.edition]\nworkspace = true\n\n[package.license]\nworkspace = true\n\n[package.rust-version]\nworkspace = true\n\n[dependencies.ariel-os-embassy-common]\nworkspace = true\n\n[dependencies.ariel-os-hal]\nworkspace = true\n\n[dependencies.cfg-if]\nworkspace = true\n\n[features]\nno-boards = []\n",
+        "Cargo.toml": "# @generated\n\n[package]\nname = \"ariel-os-boards\"\n\n[package.edition]\nworkspace = true\n\n[package.license]\nworkspace = true\n\n[package.rust-version]\nworkspace = true\n\n[dependencies.ariel-os-embassy-common]\nworkspace = true\n\n[dependencies.ariel-os-hal]\nworkspace = true\n\n[dependencies.cfg-if]\nworkspace = true\n\n[features]\nno-boards = []\n\n[lints]\n",
         "build.rs": "// @generated\n\npub fn main() {\n    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"nrf52840dk\\\"))\");\n    println!(\"cargo::rustc-check-cfg=cfg(context, values(\\\"stm32u083c-dk\\\"))\");\n}\n",
         "laze.yml": "# yamllint disable-file\n\nbuilders:\n- name: nrf52840dk\n  parent: nrf52840\n  provides:\n  - has_buttons\n  - has_leds\n  - has_usb_device_port\n- name: stm32u083c-dk\n  parent: stm32u083mc\n  provides:\n  - has_buttons\n  - has_i2c_bus\n  - has_leds\n  - has_swi\n  - has_usb_device_port\n  env:\n    CARGO_ENV:\n    - CONFIG_SWI=USART4_LPUART3\n",
         "src/lib.rs": "// @generated\n\n#![no_std]\ncfg_if::cfg_if! {\n    if #[cfg(context = \"nrf52840dk\")] { include!(\"nrf52840dk.rs\"); } else if\n    #[cfg(context = \"stm32u083c-dk\")] { include!(\"stm32u083c-dk.rs\"); } else {}\n}\n",
