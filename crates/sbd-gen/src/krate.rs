@@ -21,7 +21,7 @@ impl Crate {
 
     pub fn render(mut self) -> FileMap {
         let manifest_content = format!(
-            "# @generated\n\n{}",
+            "# @generated\n\n{}\n[lints]\n",
             toml::to_string(&self.manifest).unwrap()
         );
 
