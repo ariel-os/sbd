@@ -170,6 +170,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
             if target.has_i2c_bus() {
                 target_builder.provides.insert("has_i2c_bus".into());
             }
+            if target.has_spi_bus() {
+                target_builder.provides.insert("has_spi_bus".into());
+            }
             if target.has_host_facing_uart() {
                 target_builder
                     .provides
@@ -241,7 +244,7 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_buttons() || target.has_uarts() || target.has_i2c_bus() {
+        if target.has_any_peripheral() {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }
@@ -250,6 +253,9 @@ impl<'a> RenderTarget<'a> {
             }
             if target.has_i2c_bus() {
                 pins.push_str(&self.render_i2c_buses()?);
+            }
+            if target.has_spi_bus() {
+                pins.push_str(&self.render_spi_buses()?);
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
@@ -293,6 +299,43 @@ impl<'a> RenderTarget<'a> {
         buttons_rs.push_str("});\n");
 
         Ok(buttons_rs)
+    }
+
+    fn render_spi_buses(&mut self) -> Result<String> {
+        let mut spi_rs = String::new();
+        let spi_buses = &self.target.spi;
+
+        for (n, spi) in spi_buses.iter().enumerate() {
+            let bus_struct = format!("Spi{n}Peripherals");
+
+            self.resources.claim(&spi.miso, &bus_struct)?;
+            self.resources.claim(&spi.mosi, &bus_struct)?;
+            self.resources.claim(&spi.sck, &bus_struct)?;
+
+            let _ = writeln!(spi_rs, "ariel_os_hal::define_peripherals!({bus_struct} {{");
+            let _ = writeln!(spi_rs, "miso: {},", spi.miso);
+            let _ = writeln!(spi_rs, "mosi: {},", spi.mosi);
+            let _ = writeln!(spi_rs, "sck: {},", spi.sck);
+            spi_rs.push_str("});\n");
+
+            for (m, device) in spi.devices.iter().enumerate() {
+                let device_struct = format!("Spi{n}Device{m}");
+
+                self.resources.claim(&device.cs, &device_struct)?;
+                let _ = writeln!(
+                    spi_rs,
+                    "ariel_os_hal::define_peripherals!({device_struct} {{"
+                );
+                let _ = writeln!(spi_rs, "cs: {},", device.cs);
+                if let Some(drdy) = &device.drdy {
+                    self.resources.claim(drdy, &device_struct)?;
+                    let _ = writeln!(spi_rs, "drdy: {drdy},");
+                }
+                spi_rs.push_str("});\n");
+            }
+        }
+
+        Ok(spi_rs)
     }
 
     fn render_uarts(&mut self) -> Result<String> {
@@ -487,6 +530,7 @@ pub fn test_default_target() -> Target {
         leds: vec![],
         flags: std::collections::BTreeSet::default(),
         include: None,
+        spi: Vec::new(),
         uarts: vec![],
         quirks: vec![],
         i2c: vec![],
