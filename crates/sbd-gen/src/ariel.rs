@@ -127,14 +127,6 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
             }),
         );
 
-        board_crate.manifest.dependencies.insert(
-            "cfg-if".into(),
-            crate::krate::Dependency::Full(DependencyFull {
-                workspace: Some(true),
-                ..Default::default()
-            }),
-        );
-
         board_crate
             .files
             .insert("build.rs".into(), render_build_rs(&targets));
@@ -212,14 +204,15 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
 fn render_targets_dispatch(targets: &[Target]) -> String {
     let mut s = String::new();
 
-    s.push_str("cfg_if::cfg_if! {\n");
+    s.push_str("cfg_select! {\n");
     for target in targets {
         let target_name = &target.name;
-        let _ = writeln!(s, "if #[cfg(context = \"{target_name}\")] {{");
-        let _ = writeln!(s, "    include!(\"{target_name}.rs\");");
-        s.push_str("} else ");
+        let _ = writeln!(
+            s,
+            "context = \"{target_name}\" => {{ include!(\"{target_name}.rs\"); }}"
+        );
     }
-    s.push_str("{\n");
+    s.push_str("_ => {\n");
     s.push_str("    // TODO: handle unexpected context\n");
     s.push_str("}\n");
 
