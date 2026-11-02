@@ -119,7 +119,7 @@ mod tests {
     #[test]
     fn test_sbd_ariel() {
         let sbd_file = parse_sbd_files("sbd-test-files").unwrap();
-        let ariel = ariel::render_ariel_board_crate(&sbd_file).unwrap();
+        let ariel = ariel::render_ariel_board_crate(&sbd_file, "ariel-os-boards").unwrap();
         insta::assert_debug_snapshot!(ariel);
     }
 }
