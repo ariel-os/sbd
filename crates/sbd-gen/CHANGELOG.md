@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.5.0...sbd-gen-v0.5.1) - 2026-11-02
+
+### Added
+
+- *(gen)* add some `#[rustfmt::skip]`s in the generated Rust files
+- *(gen)* introduce an optional `--package` CLI option
+
+### Other
+
+- *(gen)* replace dependency `cfg-if` with stabilized `cfg_select!`
+- disable workspace lints in generate crate
+
 ## [0.5.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.4.0...sbd-gen-v0.5.0) - 2026-09-28
 
 ### Added
