@@ -204,6 +204,7 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
 fn render_targets_dispatch(targets: &[Target]) -> String {
     let mut s = String::new();
 
+    s.push_str("#[rustfmt::skip]\n");
     s.push_str("cfg_select! {\n");
     for target in targets {
         let target_name = &target.name;
@@ -418,6 +419,7 @@ pub fn render_build_rs(targets: &[Target]) -> String {
     let mut build_rs = String::new();
 
     build_rs.push_str("// @generated\n");
+    build_rs.push_str("#[rustfmt::skip]\n");
     build_rs.push_str("pub fn main() {\n");
 
     for target in targets {
