@@ -38,6 +38,10 @@ pub struct GenerateArielArgs {
         default = "Utf8PathBuf::from(\"ariel-os-boards\")"
     )]
     output: Utf8PathBuf,
+
+    /// name of the Cargo package to generate
+    #[argh(option, default = "String::from(\"ariel-os-boards\")")]
+    package: String,
 }
 
 pub fn generate(args: &GenerateArielArgs) -> Result<()> {
@@ -45,7 +49,7 @@ pub fn generate(args: &GenerateArielArgs) -> Result<()> {
     let mode = args.mode.unwrap_or_default();
 
     // Render the ariel crate.
-    let krate = render_ariel_board_crate(&sbd_file)?;
+    let krate = render_ariel_board_crate(&sbd_file, &args.package)?;
 
     mode.apply(&args.output, &krate)?;
 
@@ -53,8 +57,8 @@ pub fn generate(args: &GenerateArielArgs) -> Result<()> {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn render_ariel_board_crate(sbd: &SbdFile) -> Result<FileMap> {
-    let mut board_crate = Crate::new("ariel-os-boards");
+pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap> {
+    let mut board_crate = Crate::new(package);
 
     let chips: HashSet<String> = sbd
         .ariel
