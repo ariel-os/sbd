@@ -126,7 +126,7 @@ pub struct Switch {
     pub pins: StringOrVecString,
     /// Resistors defining the state of the outputs when they are 'open'.
     pub resistors: TOrVecT<PullResistor>,
-    /// Active state of the pins, i.e. state when the corresponding part of the circuit is closed.
+    /// Active state of the pins.
     pub active: TOrVecT<PinActive>,
     #[serde(default)]
     pub aliases: Vec<String>,
