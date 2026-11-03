@@ -118,7 +118,7 @@ pub struct Led {
 
 /// A Switch in the electrical sense regardless of their physical form.
 ///
-/// This includes buttons, jumper switches, dip switches etc.
+/// This includes push-buttons, toggle switches, DIP switches etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Switch {
