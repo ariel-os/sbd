@@ -307,7 +307,7 @@ impl<'a> RenderTarget<'a> {
             match (&switch.resistors, &switch.active) {
                 (TOrVecT::T(_), TOrVecT::VecT(_)) | (TOrVecT::VecT(_), TOrVecT::T(_)) => {
                     return Err(anyhow!(
-                        "`resistors` and `active need to be specified for every pin"
+                        "`resistors` and `active` need to be specified for every pin"
                     ));
                 }
                 (TOrVecT::T(r), TOrVecT::T(l)) => {
@@ -317,7 +317,7 @@ impl<'a> RenderTarget<'a> {
                 (TOrVecT::VecT(res), TOrVecT::VecT(levels)) => {
                     if res.len() != levels.len() {
                         return Err(anyhow!(
-                            "`resistors` and `active need to be specified for every pin"
+                            "`resistors` and `active` need to be specified for every pin"
                         ));
                     }
                     pull_resistors.extend(res.iter().map(to_ariel_pull));
@@ -336,7 +336,7 @@ impl<'a> RenderTarget<'a> {
             for ((pin, pull), active) in all_pins.iter().zip(pull_resistors).zip(activity_level) {
                 if (pull == "Up" && active == "High") || (pull == "Down" && active == "Low") {
                     return Err(anyhow!(
-                        "Conflict between the pull resitor and activity level for pin {pin}"
+                        "Conflict between the pull resistor and activity level for pin {pin}"
                     ));
                 }
                 write!(pins_string, "pin: {pin}, pull: {pull}, active: {active},").unwrap();
