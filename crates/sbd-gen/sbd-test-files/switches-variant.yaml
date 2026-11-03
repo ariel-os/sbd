@@ -15,12 +15,12 @@ targets:
       - pins:
           - P02
           - P03
-        active:
-          - high
-          - low
         resistors:
           - pulldown
           - none
+        active:
+          - high
+          - low
         aliases:
           - JP1
       # 3 Row DIP switch.
