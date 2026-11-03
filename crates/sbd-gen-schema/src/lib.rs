@@ -122,9 +122,9 @@ pub struct Led {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Switch {
-    /// Pins that are connected to the throws of the switch
+    /// Pins of the switch that are connected to input pins.
     pub pins: StringOrVecString,
-    /// Resistors defining the state of the outputs when they are 'open'.
+    /// Resistors defining the state of the inputs when they are otherwise floating.
     pub resistors: TOrVecT<PullResistor>,
     /// Active state of the pins.
     pub active: TOrVecT<PinActive>,
