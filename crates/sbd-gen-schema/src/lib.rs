@@ -72,7 +72,7 @@ pub struct Target {
     /// Push buttons present on the board
     #[serde(default)]
     pub buttons: Vec<Button>,
-    /// Toggle switches, jumper switches, dip switches
+    /// Toggle switches, jumper switches, DIP switches
     /// and other less common switches.
     #[serde(default)]
     pub switches: Vec<Switch>,

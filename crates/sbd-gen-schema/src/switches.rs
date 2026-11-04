@@ -2,7 +2,7 @@
 //!
 //! This module is meant to grow if the need for specific support of
 //! physical realisation of switches arises. This would take the form of structs
-//! that are specific to a single type switchthat can use and encode domain-specific
+//! that are specific to a single type and encode domain-specific
 //! information such as mutually exclusive states in jumper switches or assigning
 //! meaning to the combined state of a row of DIP switches.
 
@@ -31,8 +31,9 @@ pub struct Button {
 
 /// A Switch in the electrical sense regardless of its physical form.
 ///
-/// This is meant mainly for toggle switches and can be used to describe other
-/// types of switches like push-buttons, jumper switches or DIP switches.
+/// This is meant mainly for toggle switches and can be used as a fallback
+/// to describe other types of switches in the absence of dedicated types.
+/// Currently this covers jumper switches or DIP switches.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Switch {
