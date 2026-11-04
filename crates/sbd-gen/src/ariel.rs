@@ -166,6 +166,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
             if target.has_switches() {
                 target_builder.provides.insert("has_switches".into());
             }
+            if target.has_buttons() {
+                target_builder.provides.insert("has_buttons".into());
+            }
             if target.has_i2c_bus() {
                 target_builder.provides.insert("has_i2c_bus".into());
             }
@@ -393,7 +396,7 @@ impl<'a> RenderTarget<'a> {
 
             writeln!(
                 buttons_rs,
-                "{{ name: Button{n}, pin: {}, resistor: {}, active: {}, aliases: [{aliases_string}] }},",
+                "{{ name: Button{n}, pin: {}, pull: {}, active: {}, aliases: [{aliases_string}] }},",
                 button.pin, to_ariel_pull(&button.resistor), to_ariel_level(&button.active),
             )
             .unwrap();
