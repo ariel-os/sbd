@@ -2,11 +2,12 @@ version: 0.5.0
 targets:
   many-switches:
     chip: stm32u083mc
-    switches:
+    buttons:
       # Push Button
-      - pins: P01
-        resistors: pullup
+      - pin: P01
+        resistor: pullup
         active: low
+    switches:
       # SPST toggle switch
       - pins: P07
         resistors: none

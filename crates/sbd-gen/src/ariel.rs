@@ -242,13 +242,20 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_switches() || target.has_uarts() || target.has_i2c_bus()
+        if target.has_leds()
+            || target.has_switches()
+            || target.has_uarts()
+            || target.has_i2c_bus()
+            || target.has_buttons()
         {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }
             if target.has_switches() {
-                pins.push_str(&self.render_switches_pins()?);
+                pins.push_str(&self.render_switches()?);
+            }
+            if target.has_buttons() {
+                pins.push_str(&self.render_buttons()?);
             }
             if target.has_i2c_bus() {
                 pins.push_str(&self.render_i2c_buses()?);
@@ -280,7 +287,7 @@ impl<'a> RenderTarget<'a> {
         Ok(leds_rs)
     }
 
-    fn render_switches_pins(&mut self) -> Result<String> {
+    fn render_switches(&mut self) -> Result<String> {
         let switches = &self.target.switches;
         let mut switches_rs = String::new();
         switches_rs.push_str("ariel_os_hal::define_switches![\n");
@@ -358,6 +365,43 @@ impl<'a> RenderTarget<'a> {
         switches_rs.push_str("];\n");
 
         Ok(switches_rs)
+    }
+
+    fn render_buttons(&mut self) -> Result<String> {
+        let buttons = &self.target.buttons;
+        let mut buttons_rs = String::new();
+        buttons_rs.push_str("ariel_os_hal::define_buttons![\n");
+        for (n, button) in buttons.iter().enumerate() {
+            let name = format!("button{n}");
+
+            match (&button.resistor, &button.active) {
+                (&PullResistor::PullDown, &PinActive::Low)
+                | (&PullResistor::PullUp, &PinActive::High) => {
+                    return Err(anyhow!(
+                        "Conflict between the pull resistor and activity level for button {name}"
+                    ));
+                }
+                _ => {}
+            }
+            self.resources.claim(&button.pin, name)?;
+
+            let mut aliases_string = String::new();
+            for alias in &button.aliases {
+                aliases_string.push_str(&alias.replace(' ', "_"));
+                aliases_string.push(',');
+            }
+
+            writeln!(
+                buttons_rs,
+                "{{ name: Button{n}, pin: {}, resistor: {}, active: {}, aliases: [{aliases_string}] }},",
+                button.pin, to_ariel_pull(&button.resistor), to_ariel_level(&button.active),
+            )
+            .unwrap();
+        }
+
+        buttons_rs.push_str("];\n");
+
+        Ok(buttons_rs)
     }
 
     fn render_uarts(&mut self) -> Result<String> {
@@ -561,17 +605,19 @@ pub fn test_default_target() -> Target {
     Target {
         name: "test-target".to_string(),
         ariel: sbd_gen_schema::ariel::ArielTargetExt::default(),
-        switches: vec![],
         chip: "test-chip".to_string(),
         debugger: None,
         description: None,
-        leds: vec![],
         flags: std::collections::BTreeSet::default(),
         include: None,
+        // peripheral types
+        riot: sbd_gen_schema::riot::RiotTargetExt::default(),
+        switches: vec![],
+        buttons: vec![],
+        leds: vec![],
         uarts: vec![],
         quirks: vec![],
         i2c: vec![],
-        riot: sbd_gen_schema::riot::RiotTargetExt::default(),
     }
 }
 
@@ -618,29 +664,8 @@ fn test_render_uarts() {
 }
 
 #[test]
-fn test_render_switches_failure_conflict_resistor_active_level() {
-    use sbd_gen_schema::Switch;
-
-    let switches = vec![Switch {
-        aliases: vec![],
-        pins: StringOrVecString::String("P0".to_string()),
-        resistors: TOrVecT::T(PullResistor::PullDown),
-        active: TOrVecT::T(PinActive::Low),
-    }];
-
-    let target = Target {
-        switches,
-        ..test_default_target()
-    };
-
-    let mut render_target = RenderTarget::new(&target);
-
-    assert!(render_target.render_switches_pins().is_err());
-}
-
-#[test]
 fn test_render_switches_failure_pins_length_mismatch() {
-    use sbd_gen_schema::Switch;
+    use sbd_gen_schema::switches::Switch;
 
     let switches = vec![Switch {
         aliases: vec![],
@@ -656,12 +681,12 @@ fn test_render_switches_failure_pins_length_mismatch() {
 
     let mut render_target = RenderTarget::new(&target);
 
-    assert!(render_target.render_switches_pins().is_err());
+    assert!(render_target.render_switches().is_err());
 }
 
 #[test]
 fn test_render_switches_failure_resistors_length_mismatch() {
-    use sbd_gen_schema::Switch;
+    use sbd_gen_schema::switches::Switch;
 
     let switches = vec![Switch {
         aliases: vec![],
@@ -681,5 +706,26 @@ fn test_render_switches_failure_resistors_length_mismatch() {
 
     let mut render_target = RenderTarget::new(&target);
 
-    assert!(render_target.render_switches_pins().is_err());
+    assert!(render_target.render_switches().is_err());
+}
+
+#[test]
+fn test_render_buttons_failure_conflict_resistor_active_level() {
+    use sbd_gen_schema::switches::Button;
+
+    let buttons = vec![Button {
+        aliases: vec![],
+        pin: "P0".to_string(),
+        resistor: PullResistor::PullDown,
+        active: PinActive::Low,
+    }];
+
+    let target = Target {
+        buttons,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_buttons().is_err());
 }

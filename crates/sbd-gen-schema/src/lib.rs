@@ -2,6 +2,7 @@ pub mod ariel;
 pub mod common;
 pub mod i2c;
 pub mod riot;
+pub mod switches;
 
 use std::collections::BTreeSet;
 
@@ -11,9 +12,10 @@ use serde_with::{KeyValueMap, serde_as};
 
 use crate::{
     ariel::{Ariel, ArielTargetExt},
-    common::{StringOrVecString, TOrVecT},
+    common::StringOrVecString,
     i2c::I2cBus,
     riot::{Riot, RiotTargetExt},
+    switches::{Button, Switch},
 };
 
 const fn default_version() -> Version {
@@ -67,6 +69,11 @@ pub struct Target {
     // peripheral types
     #[serde(default)]
     pub leds: Vec<Led>,
+    /// Push buttons present on the board
+    #[serde(default)]
+    pub buttons: Vec<Button>,
+    /// Toggle switches, jumper switches, dip switches
+    /// and other less common switches.
     #[serde(default)]
     pub switches: Vec<Switch>,
     #[serde(default)]
@@ -79,6 +86,11 @@ impl Target {
     #[must_use]
     pub fn has_leds(&self) -> bool {
         !self.leds.is_empty()
+    }
+
+    #[must_use]
+    pub fn has_buttons(&self) -> bool {
+        !self.buttons.is_empty()
     }
 
     #[must_use]
@@ -112,22 +124,6 @@ pub struct Led {
     pub pin: String,
     pub color: Option<String>,
     pub active: Option<PinActive>,
-    #[serde(default)]
-    pub aliases: Vec<String>,
-}
-
-/// A Switch in the electrical sense regardless of their physical form.
-///
-/// This includes push-buttons, toggle switches, DIP switches etc.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Switch {
-    /// Pins of the switch that are connected to input pins.
-    pub pins: StringOrVecString,
-    /// Resistors defining the state of the inputs when they are otherwise floating.
-    pub resistors: TOrVecT<PullResistor>,
-    /// Active state of the pins.
-    pub active: TOrVecT<PinActive>,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
