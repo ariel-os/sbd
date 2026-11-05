@@ -8,15 +8,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Led {
-    /// Monocolor LEDs
+    /// Monocolor LED
     Monocolor(MonocolorLed),
-    /// Duocolor LEDs
+    /// Duocolor LED
     Duocolor(DuocolorLed),
-    /// Tricolor LEDs
+    /// Tricolor LED
     Tricolor(TricolorLed),
-    /// Tetracolor LEDs
+    /// Tetracolor LED
     Tetracolor(TetracolorLed),
-    /// Pentacolor LEDs
+    /// Pentacolor LED
     Pentacolor(PentacolorLed),
 }
 
@@ -69,7 +69,7 @@ pub struct TricolorLed {
 
 /// Tetracolor LED.
 ///
-/// This is meant to be used for:
+/// This can for instance be used for:
 /// - RGBA (RGB plus Amber).
 /// - RGBCW/RGBW (RGB plus Cool White).
 /// - RGBWW (RGB plus Warm White).
@@ -90,9 +90,9 @@ pub struct TetracolorLed {
 
 /// Pentacolor LED.
 ///
-/// This is meant to be used for:
+/// This can for instance be used for:
 /// - RGBACW (RGB plus Amber plus cool white)
-/// - RGB-CW-WW (RGB plus Cool White plus Warm White)
+/// - RGB+CCT (RGB plus Cool White plus Warm White)
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PentacolorLed {
