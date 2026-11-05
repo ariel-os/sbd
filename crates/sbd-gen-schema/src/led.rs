@@ -27,7 +27,7 @@ pub struct MonocolorLed {
     /// Pin of the MCU connected to the LED.
     pub pin: String,
     /// Color of the LED.
-    pub color: Option<String>,
+    pub color: String,
     /// Whether the LED is active high or low.
     pub active: PinActive,
     /// Possible aliases of the LED.
@@ -106,4 +106,45 @@ pub struct PentacolorLed {
     /// Possible aliases of the LED.
     #[serde(default)]
     pub aliases: Vec<String>,
+}
+
+impl Led {
+    /// Takes a [`Led`] variant and returns
+    /// its pins, colors, activation level and aliases
+    /// as a tuple of vectors.
+    ///
+    /// This is useful for downstream users of the [`Led`] types
+    /// while preserving the upside of each variants which is that
+    /// by construction there is an equal number of pins and colors declared
+    /// for every variant.
+    #[must_use]
+    pub fn erase_variant(&self) -> (Vec<&String>, Vec<&String>, &PinActive, &Vec<String>) {
+        match self {
+            Led::Monocolor(l) => (vec![&l.pin], vec![&l.color], &l.active, &l.aliases),
+            Led::Duocolor(l) => (
+                l.pins.iter().collect(),
+                l.colors.iter().collect(),
+                &l.active,
+                &l.aliases,
+            ),
+            Led::Tricolor(l) => (
+                l.pins.iter().collect(),
+                l.colors.iter().collect(),
+                &l.active,
+                &l.aliases,
+            ),
+            Led::Tetracolor(l) => (
+                l.pins.iter().collect(),
+                l.colors.iter().collect(),
+                &l.active,
+                &l.aliases,
+            ),
+            Led::Pentacolor(l) => (
+                l.pins.iter().collect(),
+                l.colors.iter().collect(),
+                &l.active,
+                &l.aliases,
+            ),
+        }
+    }
 }
