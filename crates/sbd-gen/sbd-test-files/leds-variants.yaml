@@ -25,6 +25,7 @@ targets:
         - red
         - green
         - blue
+        active: low
       # Tetracolor LED
       - pins:
         - P0_19
@@ -36,6 +37,7 @@ targets:
         - green
         - blue
         - amber
+        active: low
       # Pentacolor LED
       - pins:
         - P0_23
@@ -49,3 +51,4 @@ targets:
         - blue
         - warm white
         - cool white
+        active: low
