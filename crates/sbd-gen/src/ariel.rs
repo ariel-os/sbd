@@ -289,7 +289,7 @@ impl<'a> RenderTarget<'a> {
 
             for (pin, color) in pins.into_iter().zip(colors) {
                 self.resources.claim(pin, &name)?;
-                let _ = write!(channels, "pin: {pin}, color: {color}, active: {active}",);
+                let _ = write!(channels, "pin: {pin}, color: {color}, active: {active}");
             }
 
             let aliases_string = format_aliases(aliases, &name)?;
