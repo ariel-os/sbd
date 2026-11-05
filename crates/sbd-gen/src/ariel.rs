@@ -604,7 +604,6 @@ fn format_aliases(aliases: &Vec<String>, name: &str) -> Result<String> {
     Ok(aliases_string)
 }
 
-
 #[cfg(test)]
 #[must_use]
 pub fn test_default_target() -> Target {
@@ -738,9 +737,7 @@ fn test_render_buttons_failure_conflict_resistor_active_level() {
 
 #[test]
 fn test_format_alias_failure() {
-    let aliases = vec![
-        "Test 1".to_string()
-    ];
+    let aliases = vec!["Test 1".to_string()];
 
     assert!(format_aliases(&aliases, "").is_err());
 }
