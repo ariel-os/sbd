@@ -277,20 +277,33 @@ impl<'a> RenderTarget<'a> {
         let leds = &self.target.leds;
         let mut leds_rs = String::new();
 
-        leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
+        leds_rs.push_str("ariel_os_hal::define_leds![ \n");
 
         for (n, led) in leds.iter().enumerate() {
             let name = format!("led{n}");
+            let mut channels_string = String::new();
             match led {
                 Led::Monocolor(mono) => {
                     self.resources.claim(&mono.pin, &name)?;
-                    let _ = writeln!(leds_rs, "{}: {},", name, mono.pin);
+                    let _ = write!(
+                        channels_string,
+                        "pin: {}, color: {}, active: {}, ",
+                        &mono.pin, &mono.color, &mono.active
+                    );
                 }
                 Led::Duocolor(duo) => {
                     self.resources.claim(&duo.pins[0], &name)?;
                     self.resources.claim(&duo.pins[1], &name)?;
-                    let _ = writeln!(leds_rs, "{}_0: {}", name, duo.pins[0]);
-                    let _ = writeln!(leds_rs, "{}_1: {}", name, duo.pins[1]);
+                    let _ = write!(
+                        channels_string,
+                        "pin: {}, color: {}, active: {},",
+                        &duo.pins[0], &duo.colors[0], &duo.active
+                    );
+                    let _ = write!(
+                        channels_string,
+                        "pin: {}, color: {}, active: {},",
+                        &duo.pins[1], &duo.colors[1], &duo.active
+                    );
                 }
                 Led::Tricolor(trio) => {
                     self.resources.claim(&trio.pins[0], &name)?;
@@ -323,6 +336,11 @@ impl<'a> RenderTarget<'a> {
                     let _ = writeln!(leds_rs, "{}_4: {}", name, penta.pins[4]);
                 }
             }
+
+            let _ = write!(
+                leds_rs,
+                "{{ name: {name}, channels [{channel_string}], aliases: {aliases_string} }}",
+            );
         }
 
         leds_rs.push_str("});\n");

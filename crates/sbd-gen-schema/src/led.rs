@@ -29,7 +29,7 @@ pub struct MonocolorLed {
     /// Color of the LED.
     pub color: Option<String>,
     /// Whether the LED is active high or low.
-    pub active: Option<PinActive>,
+    pub active: PinActive,
     /// Possible aliases of the LED.
     #[serde(default)]
     pub aliases: Vec<String>,
@@ -42,10 +42,10 @@ pub struct DuocolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 2],
     /// Color of the LED.
-    pub colors: Option<[String; 2]>,
+    pub colors: [String; 2],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
-    pub active: Option<PinActive>,
+    pub active: PinActive,
     /// Possible aliases of the LED.
     #[serde(default)]
     pub aliases: Vec<String>,
@@ -58,10 +58,10 @@ pub struct TricolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 3],
     /// Color of the LED.
-    pub colors: Option<[String; 3]>,
+    pub colors: [String; 3],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
-    pub active: Option<PinActive>,
+    pub active: PinActive,
     /// Possible aliases of the LED.
     #[serde(default)]
     pub aliases: Vec<String>,
@@ -79,10 +79,10 @@ pub struct TetracolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 4],
     /// Color of the LED.
-    pub colors: Option<[String; 4]>,
+    pub colors: [String; 4],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
-    pub active: Option<PinActive>,
+    pub active: PinActive,
     /// Possible aliases of the LED.
     #[serde(default)]
     pub aliases: Vec<String>,
@@ -99,10 +99,10 @@ pub struct PentacolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 5],
     /// Color of the LED.
-    pub colors: Option<[String; 5]>,
+    pub colors: [String; 5],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
-    pub active: Option<PinActive>,
+    pub active: PinActive,
     /// Possible aliases of the LED.
     #[serde(default)]
     pub aliases: Vec<String>,
