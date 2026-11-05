@@ -352,11 +352,7 @@ impl<'a> RenderTarget<'a> {
                 write!(pins_string, "pin: {pin}, pull: {pull}, active: {active},").unwrap();
             }
 
-            let mut aliases_string = String::new();
-            for alias in &switch.aliases {
-                aliases_string.push_str(&alias.replace(' ', "_"));
-                aliases_string.push(',');
-            }
+            let aliases_string = format_aliases(&switch.aliases, &name)?;
 
             writeln!(
                 switches_rs,
@@ -377,6 +373,8 @@ impl<'a> RenderTarget<'a> {
         for (n, button) in buttons.iter().enumerate() {
             let name = format!("button{n}");
 
+            self.resources.claim(&button.pin, &name)?;
+
             match (&button.resistor, &button.active) {
                 (&PullResistor::PullDown, &PinActive::Low)
                 | (&PullResistor::PullUp, &PinActive::High) => {
@@ -386,13 +384,7 @@ impl<'a> RenderTarget<'a> {
                 }
                 _ => {}
             }
-            self.resources.claim(&button.pin, name)?;
-
-            let mut aliases_string = String::new();
-            for alias in &button.aliases {
-                aliases_string.push_str(&alias.replace(' ', "_"));
-                aliases_string.push(',');
-            }
+            let aliases_string = format_aliases(&button.aliases, &name)?;
 
             writeln!(
                 buttons_rs,
@@ -495,11 +487,7 @@ impl<'a> RenderTarget<'a> {
             // claiming i2C peripheral here
             self.resources.claim(peri, &bus_name)?;
 
-            let mut aliases_string = String::new();
-            for alias in &bus.aliases {
-                aliases_string.push_str(alias);
-                aliases_string.push(',');
-            }
+            let aliases_string = format_aliases(&bus.aliases, &bus_name)?;
             // Note: the name of the i2c bus is not used directly here because rust requires
             // type names to be UpperCamelCase.
             writeln!(
@@ -601,6 +589,21 @@ fn to_ariel_level(res: &PinActive) -> String {
         PinActive::Low => String::from("Low"),
     }
 }
+
+fn format_aliases(aliases: &Vec<String>, name: &str) -> Result<String> {
+    let mut aliases_string = String::new();
+    for alias in aliases {
+        if alias.contains(char::is_whitespace) {
+            return Err(anyhow!(
+                "Aliases cannot contain whitespaces. Using {alias} as an alias for {name} is forbidden"
+            ));
+        }
+        aliases_string.push_str(alias);
+        aliases_string.push(',');
+    }
+    Ok(aliases_string)
+}
+
 
 #[cfg(test)]
 #[must_use]
@@ -731,4 +734,13 @@ fn test_render_buttons_failure_conflict_resistor_active_level() {
     let mut render_target = RenderTarget::new(&target);
 
     assert!(render_target.render_buttons().is_err());
+}
+
+#[test]
+fn test_format_alias_failure() {
+    let aliases = vec![
+        "Test 1".to_string()
+    ];
+
+    assert!(format_aliases(&aliases, "").is_err());
 }
