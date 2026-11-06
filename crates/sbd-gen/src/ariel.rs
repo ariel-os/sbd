@@ -289,14 +289,15 @@ impl<'a> RenderTarget<'a> {
 
             for (pin, color) in pins.into_iter().zip(colors) {
                 self.resources.claim(pin, &name)?;
-                let _ = write!(channels, "pin: {pin}, color: {color}, active: {active}");
+                let color = color.replace(char::is_whitespace, "_");
+                let _ = write!(channels, "pin: {pin}, color: {color}, active: {active}, ");
             }
 
             let aliases_string = format_aliases(aliases, &name)?;
 
             let _ = write!(
                 leds_rs,
-                "{{ name: {name}, channels [{channels}], aliases: {aliases_string} }}",
+                "{{ name: {name}, channels [{channels}], aliases: [{aliases_string}] }}",
             );
         }
         leds_rs.push_str("];\n");
