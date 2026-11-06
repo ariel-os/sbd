@@ -1,13 +1,23 @@
 #![deny(missing_docs)]
 //! Light emitting devices consisting of Light emitting diodes (LED).
 
-use crate::PinActive;
+use crate::{PinActive, common::StringOrVecString};
 use serde::{Deserialize, Serialize};
 
-/// Dispatching enum between different types of LEDs
+/// Dispatching enum between correct and malformed LEDs.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Led {
+    /// Correct LED.
+    Correct(CorrectLed),
+    /// Malformed LED.
+    Wrong(WrongLed),
+}
+
+/// Dispatching enum between different types of correct LEDs.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CorrectLed {
     /// Monocolor LED
     Monocolor(MonocolorLed),
     /// Duocolor LED
@@ -26,7 +36,7 @@ pub enum Led {
 pub struct MonocolorLed {
     /// Pin of the MCU connected to the LED.
     pub pin: String,
-    /// Color of the LED.
+    /// Colors of the LEDs.
     pub color: String,
     /// Whether the LED is active high or low.
     pub active: PinActive,
@@ -41,7 +51,7 @@ pub struct MonocolorLed {
 pub struct DuocolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 2],
-    /// Color of the LED.
+    /// Colors of the LEDs.
     pub colors: [String; 2],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
@@ -57,7 +67,7 @@ pub struct DuocolorLed {
 pub struct TricolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 3],
-    /// Color of the LED.
+    /// Colors of the LEDs.
     pub colors: [String; 3],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
@@ -78,7 +88,7 @@ pub struct TricolorLed {
 pub struct TetracolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 4],
-    /// Color of the LED.
+    /// Colors of the LEDs.
     pub colors: [String; 4],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
@@ -98,7 +108,7 @@ pub struct TetracolorLed {
 pub struct PentacolorLed {
     /// Pins of the MCU connected to the LED.
     pub pins: [String; 5],
-    /// Color of the LED.
+    /// Colors of the LEDs.
     pub colors: [String; 5],
     /// Whether the LED is active high or low.
     /// We assume that it is the same for each pin.
@@ -108,38 +118,60 @@ pub struct PentacolorLed {
     pub aliases: Vec<String>,
 }
 
-impl Led {
-    /// Takes a [`Led`] variant and returns
+/// Fallback type for malformed LEDs.
+///
+/// This is used to give better error messages than `could not match any variant`
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WrongLed {
+    /// Pin of the MCU connected to the LED.
+    pub pin: Option<String>,
+    /// Pins of the MCU connected to the LED.
+    pub pins: Option<StringOrVecString>,
+    /// Color of the LED.
+    pub color: Option<String>,
+    /// Colors of the LED.
+    pub colors: Option<StringOrVecString>,
+    /// Whether the LED is active high or low.
+    /// We assume that it is the same for each pin.
+    pub active: Option<PinActive>,
+    /// Possible aliases of the LED.
+    #[serde(default)]
+    pub aliases: Vec<String>,
+}
+
+impl CorrectLed {
+    /// Takes a [`CorrectLed`] variant and returns
     /// its pins, colors, activation level and aliases
     /// as a tuple of vectors.
     ///
-    /// This is useful for downstream users of the [`Led`] types
+    /// This is useful for downstream users of the [`CorrectLed`] types
     /// while preserving the upside of each variants which is that
     /// by construction there is an equal number of pins and colors declared
     /// for every variant.
     #[must_use]
     pub fn erase_variant(&self) -> (Vec<&String>, Vec<&String>, &PinActive, &Vec<String>) {
         match self {
-            Led::Monocolor(l) => (vec![&l.pin], vec![&l.color], &l.active, &l.aliases),
-            Led::Duocolor(l) => (
+            Self::Monocolor(l) => (vec![&l.pin], vec![&l.color], &l.active, &l.aliases),
+            Self::Duocolor(l) => (
                 l.pins.iter().collect(),
                 l.colors.iter().collect(),
                 &l.active,
                 &l.aliases,
             ),
-            Led::Tricolor(l) => (
+            Self::Tricolor(l) => (
                 l.pins.iter().collect(),
                 l.colors.iter().collect(),
                 &l.active,
                 &l.aliases,
             ),
-            Led::Tetracolor(l) => (
+            Self::Tetracolor(l) => (
                 l.pins.iter().collect(),
                 l.colors.iter().collect(),
                 &l.active,
                 &l.aliases,
             ),
-            Led::Pentacolor(l) => (
+            Self::Pentacolor(l) => (
                 l.pins.iter().collect(),
                 l.colors.iter().collect(),
                 &l.active,
