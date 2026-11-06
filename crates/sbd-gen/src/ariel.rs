@@ -18,8 +18,7 @@ use crate::{
 };
 
 use sbd_gen_schema::{
-    PinActive, PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target,
-    common::{StringOrVecString, TOrVecT},
+    Led, PinActive, PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target, common::{StringOrVecString, TOrVecT}, led::CorrectLed,
 };
 
 #[derive(argh::FromArgs, Debug)]
@@ -283,7 +282,9 @@ impl<'a> RenderTarget<'a> {
             let name = format!("led{n}");
             let mut channels = String::new();
 
-            let (pins, colors, active, aliases) = led.erase_variant();
+            let (pins, colors, active, aliases) = inspect_led(led).map_err(
+                |e| e.context(format!("Cannot parse {name}"))
+            )?.erase_variant();
 
             let active = to_ariel_level(active);
 
@@ -297,7 +298,7 @@ impl<'a> RenderTarget<'a> {
 
             let _ = write!(
                 leds_rs,
-                "{{ name: {name}, channels [{channels}], aliases: [{aliases_string}] }}",
+                "{{ name: Led{n}, channels: [{channels}], aliases: [{aliases_string}] }},",
             );
         }
         leds_rs.push_str("];\n");
@@ -617,6 +618,83 @@ fn format_aliases(aliases: &Vec<String>, name: &str) -> Result<String> {
         aliases_string.push(',');
     }
     Ok(aliases_string)
+}
+
+fn inspect_led(led: &Led) -> Result<&CorrectLed> {
+    match led {
+        Led::Correct(c) => Ok(c),
+        Led::Wrong(w) => {
+            match (&w.pin, &w.pins, &w.color, &w.colors, &w.active) {
+                (_, _, _, _, None) => {
+                    Err(anyhow!(
+                        "`active` field is mandatory for single and multi-channel LEDs"
+                    ))
+                },
+                (Some(_), Some(_), _, _, _) | (None, None, _, _, _)=> {
+                    Err(anyhow!(
+                        "exactly one of `pin` or `pins` must be present"
+                    ))
+                },
+                (_, _, Some(_), Some(_), _) | (_, _, None, None, _)=> {
+                    Err(anyhow!(
+                        "exactly one of `color` or `colors` must be present"
+                    ))
+                },
+                (Some(_), None, None, Some(_), _) | (None, Some(_), Some(_), None, _) => {
+                    Err(anyhow!(
+                        "LEDs with a single channel use `pin` and `color` field names while multi-channel LEDs use `pins` and `colors`"
+                    ))
+                }
+                (None, Some(p), None, Some(c), _) => {
+                    let pins = match p {
+                        StringOrVecString::String(_) => {
+                            return Err(anyhow!(
+                                "`pins` is the field name for multi-channel LEDs and expects a list of 2 or more pins"
+                            ));
+                        }
+                        StringOrVecString::VecString(v) => {
+                            if v.len() == 1 {
+                                return Err(anyhow!(
+                                    "`pins` is the field name for multi-channel LEDs and expects a list of 2 or more pins"
+                                ));
+                            }
+                            v
+                        }
+                    };
+                    let colors = match c {
+                        StringOrVecString::String(_) => {
+                            return Err(anyhow!(
+                                "`colors` is the field name for multi-channel LEDs and expects a list of 2 or more colors"
+                            ));
+                        }
+                        StringOrVecString::VecString(v) => {
+                            if v.len() == 1 {
+                                return Err(anyhow!(
+                                    "`colors` is the field name for multi-channel LEDs and expects a list of 2 or more colors"
+                                ));
+                            }
+                            v
+                        }
+                    };
+
+                    if pins.len() >= 6 || colors.len() >= 6 {
+                        Err(anyhow!(
+                            "currently, SBD only supports composite LEDs with up to 5 channels"
+                        ))
+                    } else if pins.len() != colors.len() {
+                        Err(anyhow!(
+                            "mismatch in the number of `pins` ({}) and `colors` ({})", pins.len(), colors.len()
+                        ))
+                    } else {
+                        unreachable!("Unreachable by construction")
+                    }
+                }
+                (Some(_), None, Some(_), None, Some(_)) => {
+                    unreachable!("This is a correct LED it should not be flaged as incorrect");
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
