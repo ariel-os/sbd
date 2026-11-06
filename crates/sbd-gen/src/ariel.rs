@@ -119,14 +119,6 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
             }),
         );
 
-        board_crate.manifest.dependencies.insert(
-            "ariel-os-embassy-common".into(),
-            crate::krate::Dependency::Full(DependencyFull {
-                workspace: Some(true),
-                ..Default::default()
-            }),
-        );
-
         board_crate
             .files
             .insert("build.rs".into(), render_build_rs(&targets));
