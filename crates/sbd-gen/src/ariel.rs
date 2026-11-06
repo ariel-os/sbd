@@ -17,7 +17,9 @@ use crate::{
     resources::Resources,
 };
 
-use sbd_gen_schema::{PinLevel, Quirk, SbdFile, SetPinOp, Target, common::StringOrVecString};
+use sbd_gen_schema::{
+    Led, PinActive, PinLevel, PullResistor, Quirk, SbdFile, SetPinOp, Target, common::{StringOrVecString, TOrVecT}, led::CorrectLed,
+};
 
 #[derive(argh::FromArgs, Debug)]
 #[argh(subcommand, name = "generate-ariel")]
@@ -160,6 +162,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
             if target.has_leds() {
                 target_builder.provides.insert("has_leds".into());
             }
+            if target.has_switches() {
+                target_builder.provides.insert("has_switches".into());
+            }
             if target.has_buttons() {
                 target_builder.provides.insert("has_buttons".into());
             }
@@ -239,12 +244,20 @@ impl<'a> RenderTarget<'a> {
         pins.push_str("pub mod pins {\n");
         let target = self.target;
 
-        if target.has_leds() || target.has_buttons() || target.has_uarts() || target.has_i2c_bus() {
+        if target.has_leds()
+            || target.has_switches()
+            || target.has_uarts()
+            || target.has_i2c_bus()
+            || target.has_buttons()
+        {
             if target.has_leds() {
                 pins.push_str(&self.render_led_pins()?);
             }
+            if target.has_switches() {
+                pins.push_str(&self.render_switches()?);
+            }
             if target.has_buttons() {
-                pins.push_str(&self.render_button_pins()?);
+                pins.push_str(&self.render_buttons()?);
             }
             if target.has_i2c_bus() {
                 pins.push_str(&self.render_i2c_buses()?);
@@ -263,32 +276,141 @@ impl<'a> RenderTarget<'a> {
         let leds = &self.target.leds;
         let mut leds_rs = String::new();
 
-        leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
+        leds_rs.push_str("ariel_os_hal::define_leds![ \n");
 
         for (n, led) in leds.iter().enumerate() {
             let name = format!("led{n}");
-            self.resources.claim(&led.pin, &name)?;
-            let _ = writeln!(leds_rs, "{}: {},", name, led.pin);
-        }
+            let mut channels = String::new();
 
-        leds_rs.push_str("});\n");
+            let (pins, colors, active, aliases) = inspect_led(led).map_err(
+                |e| e.context(format!("Cannot parse {name}"))
+            )?.erase_variant();
+
+            let active = to_ariel_level(active);
+
+            for (pin, color) in pins.into_iter().zip(colors) {
+                self.resources.claim(pin, &name)?;
+                let color = color.replace(char::is_whitespace, "_");
+                let _ = write!(channels, "pin: {pin}, color: {color}, active: {active}, ");
+            }
+
+            let aliases_string = format_aliases(aliases, &name)?;
+
+            let _ = write!(
+                leds_rs,
+                "{{ name: Led{n}, channels: [{channels}], aliases: [{aliases_string}] }},",
+            );
+        }
+        leds_rs.push_str("];\n");
 
         Ok(leds_rs)
     }
 
-    fn render_button_pins(&mut self) -> Result<String> {
-        let buttons = &self.target.buttons;
-        let mut buttons_rs = String::new();
+    fn render_switches(&mut self) -> Result<String> {
+        let switches = &self.target.switches;
+        let mut switches_rs = String::new();
+        switches_rs.push_str("ariel_os_hal::define_switches![\n");
+        for (n, switch) in switches.iter().enumerate() {
+            let name = format!("switch{n}");
+            let mut all_pins: Vec<String> = vec![];
+            let mut pull_resistors = vec![];
+            let mut activity_level = vec![];
 
-        buttons_rs.push_str("ariel_os_hal::define_peripherals!(ButtonPeripherals {\n");
+            match &switch.pins {
+                StringOrVecString::String(pin) => {
+                    self.resources.claim(pin, &name)?;
+                    all_pins.push(pin.clone());
+                }
+                StringOrVecString::VecString(pins) => {
+                    for pin in pins {
+                        self.resources.claim(pin, &name)?;
+                        all_pins.push(pin.clone());
+                    }
+                }
+            }
 
-        for (n, button) in buttons.iter().enumerate() {
-            let name = format!("button{n}");
-            self.resources.claim(&button.pin, &name)?;
-            let _ = writeln!(buttons_rs, "{}: {},", name, button.pin);
+            // Declared resistors and active levels need to stay consistent.
+            match (&switch.resistors, &switch.active) {
+                (TOrVecT::T(_), TOrVecT::VecT(_)) | (TOrVecT::VecT(_), TOrVecT::T(_)) => {
+                    return Err(anyhow!(
+                        "`resistors` and `active` need to be specified for every pin"
+                    ));
+                }
+                (TOrVecT::T(r), TOrVecT::T(l)) => {
+                    pull_resistors = vec![to_ariel_pull(r)];
+                    activity_level = vec![to_ariel_level(l)];
+                }
+                (TOrVecT::VecT(res), TOrVecT::VecT(levels)) => {
+                    if res.len() != levels.len() {
+                        return Err(anyhow!(
+                            "`resistors` and `active` need to be specified for every pin"
+                        ));
+                    }
+                    pull_resistors.extend(res.iter().map(to_ariel_pull));
+                    activity_level.extend(levels.iter().map(to_ariel_level));
+                }
+            }
+
+            // FIXME: do that during the parsing somehow ?
+            if all_pins.len() != pull_resistors.len() || all_pins.len() != activity_level.len() {
+                return Err(anyhow!(
+                    "All of the pins must have their Pull resistors/activity level specified"
+                ));
+            }
+
+            let mut pins_string = String::new();
+            for ((pin, pull), active) in all_pins.iter().zip(pull_resistors).zip(activity_level) {
+                if (pull == "Up" && active == "High") || (pull == "Down" && active == "Low") {
+                    return Err(anyhow!(
+                        "Conflict between the pull resistor and activity level for pin {pin}"
+                    ));
+                }
+                write!(pins_string, "pin: {pin}, pull: {pull}, active: {active},").unwrap();
+            }
+
+            let aliases_string = format_aliases(&switch.aliases, &name)?;
+
+            writeln!(
+                switches_rs,
+                "{{ name: Switch{n}, pins: [{pins_string}], aliases: [{aliases_string}] }},",
+            )
+            .unwrap();
         }
 
-        buttons_rs.push_str("});\n");
+        switches_rs.push_str("];\n");
+
+        Ok(switches_rs)
+    }
+
+    fn render_buttons(&mut self) -> Result<String> {
+        let buttons = &self.target.buttons;
+        let mut buttons_rs = String::new();
+        buttons_rs.push_str("ariel_os_hal::define_buttons![\n");
+        for (n, button) in buttons.iter().enumerate() {
+            let name = format!("button{n}");
+
+            self.resources.claim(&button.pin, &name)?;
+
+            match (&button.resistor, &button.active) {
+                (&PullResistor::PullDown, &PinActive::Low)
+                | (&PullResistor::PullUp, &PinActive::High) => {
+                    return Err(anyhow!(
+                        "Conflict between the pull resistor and activity level for button {name}"
+                    ));
+                }
+                _ => {}
+            }
+            let aliases_string = format_aliases(&button.aliases, &name)?;
+
+            writeln!(
+                buttons_rs,
+                "{{ name: Button{n}, pin: {}, pull: {}, active: {}, aliases: [{aliases_string}] }},",
+                button.pin, to_ariel_pull(&button.resistor), to_ariel_level(&button.active),
+            )
+            .unwrap();
+        }
+
+        buttons_rs.push_str("];\n");
 
         Ok(buttons_rs)
     }
@@ -381,11 +503,7 @@ impl<'a> RenderTarget<'a> {
             // claiming i2C peripheral here
             self.resources.claim(peri, &bus_name)?;
 
-            let mut aliases_string = String::new();
-            for alias in &bus.aliases {
-                aliases_string.push_str(alias);
-                aliases_string.push(',');
-            }
+            let aliases_string = format_aliases(&bus.aliases, &bus_name)?;
             // Note: the name of the i2c bus is not used directly here because rust requires
             // type names to be UpperCamelCase.
             writeln!(
@@ -473,23 +591,131 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
     init_body.push_str(&code);
 }
 
+fn to_ariel_pull(res: &PullResistor) -> String {
+    match res {
+        PullResistor::PullDown => String::from("Down"),
+        PullResistor::PullUp => String::from("Up"),
+        PullResistor::None => String::from("None"),
+    }
+}
+
+fn to_ariel_level(res: &PinActive) -> String {
+    match res {
+        PinActive::High => String::from("High"),
+        PinActive::Low => String::from("Low"),
+    }
+}
+
+fn format_aliases(aliases: &Vec<String>, name: &str) -> Result<String> {
+    let mut aliases_string = String::new();
+    for alias in aliases {
+        if alias.contains(char::is_whitespace) {
+            return Err(anyhow!(
+                "Aliases cannot contain whitespaces. Using {alias} as an alias for {name} is forbidden"
+            ));
+        }
+        aliases_string.push_str(alias);
+        aliases_string.push(',');
+    }
+    Ok(aliases_string)
+}
+
+fn inspect_led(led: &Led) -> Result<&CorrectLed> {
+    match led {
+        Led::Correct(c) => Ok(c),
+        Led::Wrong(w) => {
+            match (&w.pin, &w.pins, &w.color, &w.colors, &w.active) {
+                (_, _, _, _, None) => {
+                    Err(anyhow!(
+                        "`active` field is mandatory for single and multi-channel LEDs"
+                    ))
+                },
+                (Some(_), Some(_), _, _, _) | (None, None, _, _, _)=> {
+                    Err(anyhow!(
+                        "exactly one of `pin` or `pins` must be present"
+                    ))
+                },
+                (_, _, Some(_), Some(_), _) | (_, _, None, None, _)=> {
+                    Err(anyhow!(
+                        "exactly one of `color` or `colors` must be present"
+                    ))
+                },
+                (Some(_), None, None, Some(_), _) | (None, Some(_), Some(_), None, _) => {
+                    Err(anyhow!(
+                        "LEDs with a single channel use `pin` and `color` field names while multi-channel LEDs use `pins` and `colors`"
+                    ))
+                }
+                (None, Some(p), None, Some(c), _) => {
+                    let pins = match p {
+                        StringOrVecString::String(_) => {
+                            return Err(anyhow!(
+                                "`pins` is the field name for multi-channel LEDs and expects a list of 2 or more pins"
+                            ));
+                        }
+                        StringOrVecString::VecString(v) => {
+                            if v.len() == 1 {
+                                return Err(anyhow!(
+                                    "`pins` is the field name for multi-channel LEDs and expects a list of 2 or more pins"
+                                ));
+                            }
+                            v
+                        }
+                    };
+                    let colors = match c {
+                        StringOrVecString::String(_) => {
+                            return Err(anyhow!(
+                                "`colors` is the field name for multi-channel LEDs and expects a list of 2 or more colors"
+                            ));
+                        }
+                        StringOrVecString::VecString(v) => {
+                            if v.len() == 1 {
+                                return Err(anyhow!(
+                                    "`colors` is the field name for multi-channel LEDs and expects a list of 2 or more colors"
+                                ));
+                            }
+                            v
+                        }
+                    };
+
+                    if pins.len() >= 6 || colors.len() >= 6 {
+                        Err(anyhow!(
+                            "currently, SBD only supports composite LEDs with up to 5 channels"
+                        ))
+                    } else if pins.len() != colors.len() {
+                        Err(anyhow!(
+                            "mismatch in the number of `pins` ({}) and `colors` ({})", pins.len(), colors.len()
+                        ))
+                    } else {
+                        unreachable!("Unreachable by construction")
+                    }
+                }
+                (Some(_), None, Some(_), None, Some(_)) => {
+                    unreachable!("This is a correct LED it should not be flaged as incorrect");
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 #[must_use]
 pub fn test_default_target() -> Target {
     Target {
         name: "test-target".to_string(),
         ariel: sbd_gen_schema::ariel::ArielTargetExt::default(),
-        buttons: vec![],
         chip: "test-chip".to_string(),
         debugger: None,
         description: None,
-        leds: vec![],
         flags: std::collections::BTreeSet::default(),
         include: None,
+        // peripheral types
+        riot: sbd_gen_schema::riot::RiotTargetExt::default(),
+        switches: vec![],
+        buttons: vec![],
+        leds: vec![],
         uarts: vec![],
         quirks: vec![],
         i2c: vec![],
-        riot: sbd_gen_schema::riot::RiotTargetExt::default(),
     }
 }
 
@@ -533,4 +759,78 @@ fn test_render_uarts() {
 ];
 "
     );
+}
+
+#[test]
+fn test_render_switches_failure_pins_length_mismatch() {
+    use sbd_gen_schema::switches::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::VecString(vec!["P0".to_string(), "P1".to_string()]),
+        resistors: TOrVecT::T(PullResistor::PullUp),
+        active: TOrVecT::T(PinActive::Low),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches().is_err());
+}
+
+#[test]
+fn test_render_switches_failure_resistors_length_mismatch() {
+    use sbd_gen_schema::switches::Switch;
+
+    let switches = vec![Switch {
+        aliases: vec![],
+        pins: StringOrVecString::VecString(vec![
+            "P0".to_string(),
+            "P1".to_string(),
+            "P2".to_string(),
+        ]),
+        resistors: TOrVecT::VecT(vec![PullResistor::PullUp, PullResistor::None]),
+        active: TOrVecT::VecT(vec![PinActive::Low, PinActive::Low, PinActive::Low]),
+    }];
+
+    let target = Target {
+        switches,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_switches().is_err());
+}
+
+#[test]
+fn test_render_buttons_failure_conflict_resistor_active_level() {
+    use sbd_gen_schema::switches::Button;
+
+    let buttons = vec![Button {
+        aliases: vec![],
+        pin: "P0".to_string(),
+        resistor: PullResistor::PullDown,
+        active: PinActive::Low,
+    }];
+
+    let target = Target {
+        buttons,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    assert!(render_target.render_buttons().is_err());
+}
+
+#[test]
+fn test_format_alias_failure() {
+    let aliases = vec!["Test 1".to_string()];
+
+    assert!(format_aliases(&aliases, "").is_err());
 }
