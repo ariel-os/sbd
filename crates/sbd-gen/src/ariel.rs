@@ -119,14 +119,6 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
             }),
         );
 
-        board_crate.manifest.dependencies.insert(
-            "ariel-os-embassy-common".into(),
-            crate::krate::Dependency::Full(DependencyFull {
-                workspace: Some(true),
-                ..Default::default()
-            }),
-        );
-
         board_crate
             .files
             .insert("build.rs".into(), render_build_rs(&targets));
@@ -462,8 +454,8 @@ fn handle_set_bin_op(set_pin_op: &SetPinOp, init_body: &mut String) {
         code,
         "let output = ariel_os_hal::gpio::Output::new(pin, {});",
         match set_pin_op.level {
-            PinLevel::High => "ariel_os_embassy_common::gpio::Level::High",
-            PinLevel::Low => "ariel_os_embassy_common::gpio::Level::Low",
+            PinLevel::High => "ariel_os_hal::gpio::Level::High",
+            PinLevel::Low => "ariel_os_hal::gpio::Level::Low",
         }
     );
 
