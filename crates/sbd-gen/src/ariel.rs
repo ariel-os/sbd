@@ -4,7 +4,10 @@
 // - functions rendering a whole file are named render_<file_name>_<ext>, e.g., `render_target_rs`
 // - functions rendering a part of a file are named render_<somename>, e.g., `render_target_rs_init_body`
 //
-use std::{collections::HashSet, fmt::Write as _};
+use std::{
+    collections::{BTreeMap, HashSet},
+    fmt::Write as _,
+};
 
 use anyhow::{Context as _, Result, anyhow};
 use camino::Utf8PathBuf;
@@ -103,6 +106,20 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
         board_crate.manifest.package.edition = workspace();
         board_crate.manifest.package.license = workspace();
         board_crate.manifest.package.rust_version = workspace();
+
+        // Write the tool version into the generated manifest.
+        {
+            let mut metadata_subtable = BTreeMap::new();
+            metadata_subtable.insert(
+                String::from("version"),
+                String::from(env!("CARGO_PKG_VERSION")),
+            );
+
+            let mut metadata = BTreeMap::new();
+            // Does not use `CARGO_PKG_NAME` in case the package name changes in the future.
+            metadata.insert(String::from("sbd-gen"), metadata_subtable);
+            board_crate.manifest.package.metadata = metadata;
+        }
 
         // features
         board_crate
