@@ -118,12 +118,16 @@ impl Target {
     }
 }
 
+/// Simple monocolor LED.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Led {
+    /// Pin that is connected to the MCU.
     pub pin: String,
-    pub color: Option<String>,
-    pub active: Option<PinActive>,
+    /// Color of the LED.
+    pub color: String,
+    /// Active level of the LED.
+    pub active: PinActive,
     #[serde(default)]
     pub aliases: Vec<String>,
 }
