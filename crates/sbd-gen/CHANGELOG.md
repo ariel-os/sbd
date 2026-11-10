@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.5.1...sbd-gen-v0.6.0) - 2026-11-10
+
+### Added
+
+- *(ariel)* [**breaking**] remove the generated dep on `ariel-os-embassy-common`
+- *(leds)* [**breaking**] defer led struct generation to a macro
+- *(buttons)* [**breaking**] generate code for buttons and switches
+- *(sbd-gen)* write the tool version in the generated package manifest
+- *(ariel)* make quirks not require `ariel-os-embassy-common`
+
+### Other
+
+- *(ariel)* redact the tool version from the generated manifest
+- *(ariel)* switch snapshots to YAML to use `Serialize`
+
 ## [0.5.1](https://github.com/ariel-os/sbd/compare/sbd-gen-v0.5.0...sbd-gen-v0.5.1) - 2026-11-02
 
 ### Added
