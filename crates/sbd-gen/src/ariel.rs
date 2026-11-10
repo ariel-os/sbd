@@ -294,15 +294,26 @@ impl<'a> RenderTarget<'a> {
         let leds = &self.target.leds;
         let mut leds_rs = String::new();
 
-        leds_rs.push_str("ariel_os_hal::define_peripherals!(LedPeripherals {\n");
+        leds_rs.push_str("ariel_os_hal::define_leds![\n");
 
         for (n, led) in leds.iter().enumerate() {
             let name = format!("led{n}");
             self.resources.claim(&led.pin, &name)?;
-            let _ = writeln!(leds_rs, "{}: {},", name, led.pin);
+
+            let active = to_ariel_level(&led.active);
+            let color = led.color.replace(char::is_whitespace, "_");
+
+            let aliases_string = format_aliases(&led.aliases, &name)?;
+
+            writeln!(
+                leds_rs,
+                "{{ field_name: led{n}, type_name: Led{n}, pin: {}, color: {}, active: {}, aliases: [{}] }},",
+                led.pin, color, active, aliases_string
+            )
+            .unwrap();
         }
 
-        leds_rs.push_str("});\n");
+        leds_rs.push_str("];\n");
 
         Ok(leds_rs)
     }

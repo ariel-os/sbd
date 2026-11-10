@@ -10,12 +10,15 @@ targets:
       # led0
       - pin: PC13
         color: green
+        active: low
       # led1
       - pin: PA5
         color: blue
+        active: low
       # led2
       - pin: PB2
         color: red
+        active: low
     buttons:
       # button0
       - pin: PC2
