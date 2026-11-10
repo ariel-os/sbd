@@ -1,4 +1,4 @@
-version: 0.4.0
+version: 0.5.0
 description: test sbd file
 targets:
   nrf52840dk:
@@ -18,11 +18,19 @@ targets:
         color: green
 
     buttons:
+      # button0
       - pin: P0_11
+        resistor: pullup
         active: low
+      # button1
       - pin: P0_12
+        resistor: none
         active: low
+      # button2
       - pin: P0_24
+        resistor: none
         active: low
+      # button3
       - pin: P0_25
+        resistor: none
         active: low
