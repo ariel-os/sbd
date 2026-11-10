@@ -14,8 +14,10 @@ targets:
         active: low
       - pin: P0_15
         color: green
+        active: low
       - pin: P0_16
         color: green
+        active: low
 
     buttons:
       # button0
