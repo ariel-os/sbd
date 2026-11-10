@@ -120,6 +120,37 @@ mod tests {
     fn test_sbd_ariel() {
         let sbd_file = parse_sbd_files("sbd-test-files").unwrap();
         let ariel = ariel::render_ariel_board_crate(&sbd_file, "ariel-os-boards").unwrap();
-        insta::assert_yaml_snapshot!(ariel);
+
+        // Redact the tool version written into the manifest.
+        let mut settings = insta::Settings::clone_current();
+        settings.add_redaction(
+            ".map",
+            insta::dynamic_redaction(|value, _path| {
+                let mut redacted = value.clone();
+
+                match &mut redacted {
+                    insta::internals::Content::Map(vec) => {
+                        let (_, v) = vec
+                            .iter_mut()
+                            .find(|(k, _)| k.as_str().unwrap() == "Cargo.toml")
+                            .unwrap();
+
+                        if let insta::internals::Content::String(s) = v {
+                            let version_regex = lazy_regex::regex!(r#"version = "\d+\.\d+\.\d+""#);
+                            *s = version_regex
+                                .replace(s, r#"version = "[sbd-gen version]""#)
+                                .to_string();
+                        }
+
+                        redacted
+                    }
+                    _ => value,
+                }
+            }),
+        );
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(ariel);
+        });
     }
 }
