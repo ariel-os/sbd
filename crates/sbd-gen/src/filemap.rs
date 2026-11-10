@@ -6,8 +6,9 @@ use std::{
 
 use anyhow::{Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
+use serde::Serialize;
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize)]
 pub struct FileMap {
     pub map: BTreeMap<Utf8PathBuf, String>,
     tagfile: Option<Utf8PathBuf>,
