@@ -80,6 +80,8 @@ pub struct Target {
     pub i2c: Vec<I2cBus>,
     #[serde(default)]
     pub uarts: Vec<Uart>,
+    #[serde(default)]
+    pub spi: Vec<SpiBus>,
 }
 
 impl Target {
@@ -102,6 +104,11 @@ impl Target {
     #[must_use]
     pub fn has_i2c_bus(&self) -> bool {
         !self.i2c.is_empty()
+    }
+
+    #[must_use]
+    pub fn has_spi_bus(&self) -> bool {
+        !self.spi.is_empty()
     }
 
     /// Returns true if there are any UARTs listed for this board.
@@ -237,6 +244,30 @@ pub struct Uart {
     /// report debug or measurement data.
     #[serde(default)]
     pub host_facing: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiBus {
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    pub miso: String,
+    pub mosi: String,
+    pub sck: String,
+    #[serde(default)]
+    pub devices: Vec<SpiDevice>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpiDevice {
+    #[serde(rename = "type")]
+    pub type_: String,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    pub cs: String,
+    /// Optional interrupt/data-ready line from the device to the MCU.
+    pub drdy: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

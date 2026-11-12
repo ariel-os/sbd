@@ -181,6 +181,9 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
             if target.has_i2c_bus() {
                 target_builder.provides.insert("has_i2c_bus".into());
             }
+            if target.has_spi_bus() {
+                target_builder.provides.insert("has_spi_bus".into());
+            }
             if target.has_host_facing_uart() {
                 target_builder
                     .provides
@@ -258,6 +261,7 @@ impl<'a> RenderTarget<'a> {
             || target.has_switches()
             || target.has_uarts()
             || target.has_i2c_bus()
+            || target.has_spi_bus()
             || target.has_buttons()
         {
             if target.has_leds() {
@@ -271,6 +275,9 @@ impl<'a> RenderTarget<'a> {
             }
             if target.has_i2c_bus() {
                 pins.push_str(&self.render_i2c_buses()?);
+            }
+            if target.has_spi_bus() {
+                pins.push_str(&self.render_spi_buses()?);
             }
             if target.has_uarts() {
                 pins.push_str(&self.render_uarts()?);
@@ -417,6 +424,80 @@ impl<'a> RenderTarget<'a> {
         buttons_rs.push_str("];\n");
 
         Ok(buttons_rs)
+    }
+
+    fn render_spi_buses(&mut self) -> Result<String> {
+        let spi_buses = &self.target.spi;
+        let mut code = String::new();
+
+        // Deferring to a macro so that any actual logic in there is handled in the OS where it
+        // belongs; this merely processes the data into a format usable there.
+        code.push_str("ariel_os_hal::define_spi_buses![\n");
+
+        for (n, bus) in spi_buses.iter().enumerate() {
+            let bus_name = format!("spi{n}");
+
+            self.resources.claim(&bus.miso, &bus_name)?;
+            self.resources.claim(&bus.mosi, &bus_name)?;
+            self.resources.claim(&bus.sck, &bus_name)?;
+
+            let aliases_string = format_aliases(&bus.aliases, &bus_name)?;
+
+            // Note: the name of the spi bus is not used directly here because rust requires
+            // type names to be UpperCamelCase.
+            writeln!(
+                code,
+                "{{ name: Spi{n}, miso: {}, mosi: {}, sck: {}, aliases: [{}] }},",
+                bus.miso, bus.mosi, bus.sck, aliases_string
+            )
+            .unwrap();
+        }
+
+        code.push_str("];\n");
+
+        if spi_buses.iter().any(|bus| !bus.devices.is_empty()) {
+            code.push_str(&self.render_spi_devices()?);
+        }
+
+        Ok(code)
+    }
+
+    fn render_spi_devices(&mut self) -> Result<String> {
+        let spi_buses = &self.target.spi;
+        let mut code = String::new();
+
+        // Each device record carries the bus it hangs off of (`bus: SpiN`), since unlike leds,
+        // buttons, i2c buses, etc., SPI devices nest below a bus rather than being a flat list.
+        code.push_str("ariel_os_hal::define_spi_devices![\n");
+
+        for (n, bus) in spi_buses.iter().enumerate() {
+            for (m, device) in bus.devices.iter().enumerate() {
+                let device_name = format!("spi{n}_device{m}");
+
+                self.resources.claim(&device.cs, &device_name)?;
+
+                let drdy_string = if let Some(drdy) = &device.drdy {
+                    self.resources.claim(drdy, &device_name)?;
+                    format!("Some({drdy})")
+                } else {
+                    String::from("None")
+                };
+
+                let aliases_string = format_aliases(&device.aliases, &device_name)?;
+                let device_type = device.type_.replace(char::is_whitespace, "_");
+
+                writeln!(
+                    code,
+                    "{{ name: Spi{n}Device{m}, bus: Spi{n}, type_: {}, cs: {}, drdy: {}, aliases: [{}] }},",
+                    device_type, device.cs, drdy_string, aliases_string
+                )
+                .unwrap();
+            }
+        }
+
+        code.push_str("];\n");
+
+        Ok(code)
     }
 
     fn render_uarts(&mut self) -> Result<String> {
@@ -640,6 +721,7 @@ pub fn test_default_target() -> Target {
         switches: vec![],
         buttons: vec![],
         leds: vec![],
+        spi: Vec::new(),
         uarts: vec![],
         quirks: vec![],
         i2c: vec![],
@@ -683,6 +765,52 @@ fn test_render_uarts() {
         "ariel_os_hal::define_uarts![
 { name: Uart0, device: UART2, tx: PC99, rx: PA08, host_facing: false },
 { name: Uart1, device: UART1, tx: P1_23, rx: P0_04, host_facing: true },
+];
+"
+    );
+}
+
+#[test]
+fn test_render_spi_buses() {
+    use sbd_gen_schema::{SpiBus, SpiDevice};
+
+    let spi = vec![SpiBus {
+        aliases: vec!["spi0".to_string()],
+        miso: "P0_28".to_owned(),
+        mosi: "P0_29".to_owned(),
+        sck: "P0_27".to_owned(),
+        devices: vec![
+            SpiDevice {
+                type_: "sensor foo".to_owned(),
+                aliases: vec![],
+                cs: "P0_30".to_owned(),
+                drdy: Some("P0_03".to_owned()),
+            },
+            SpiDevice {
+                type_: "flash".to_owned(),
+                aliases: vec!["ext_flash".to_string()],
+                cs: "P0_31".to_owned(),
+                drdy: None,
+            },
+        ],
+    }];
+
+    let target = Target {
+        spi,
+        ..test_default_target()
+    };
+
+    let mut render_target = RenderTarget::new(&target);
+
+    let rendered = render_target.render_spi_buses().unwrap();
+    assert_eq!(
+        rendered,
+        "ariel_os_hal::define_spi_buses![
+{ name: Spi0, miso: P0_28, mosi: P0_29, sck: P0_27, aliases: [spi0,] },
+];
+ariel_os_hal::define_spi_devices![
+{ name: Spi0Device0, bus: Spi0, type_: sensor_foo, cs: P0_30, drdy: Some(P0_03), aliases: [] },
+{ name: Spi0Device1, bus: Spi0, type_: flash, cs: P0_31, drdy: None, aliases: [ext_flash,] },
 ];
 "
     );

@@ -263,6 +263,28 @@ fn generate_riot_target(sbd: &SbdFile, target: &Target) -> Result<RiotTarget> {
         features.insert("periph_uart".into());
     }
 
+    // SPIs
+    //
+    // RIOT SPI config generation isn't implemented yet: unlike UART, there's no RIOT
+    // chip-level SPI peripheral metadata in the schema, and this would otherwise be
+    // unverified, speculative codegen with no RIOT SME review (mirroring I2C, which has
+    // no RIOT codegen or schema footprint at all). Leave an explicit placeholder instead
+    // of guessing at a spi_conf_t layout, so a RIOT SME can design the real mapping.
+    if !target.spi.is_empty() {
+        println!(
+            "warning: {}: SPI bus(es) are defined, but RIOT SPI codegen is not implemented yet",
+            target.name
+        );
+        periph_conf_h.content_snips.push(
+            "\n/* TODO(RIOT): SPI peripheral config generation is not implemented yet.\n\
+             * This board defines SPI bus(es) in its SBD file, but sbd-gen does not yet\n\
+             * generate a spi_conf_t for RIOT. See the \"SPIs\" section of\n\
+             * crates/sbd-gen/src/riot.rs.\n\
+             */\n"
+                .to_string(),
+        );
+    }
+
     // finishing
     if !features.is_empty() {
         for feature in features {
