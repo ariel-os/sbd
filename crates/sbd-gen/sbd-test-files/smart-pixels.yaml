@@ -1,0 +1,11 @@
+version: 0.5.1
+description: test sbd file
+targets:
+  nrf52840dk:
+    chip: nrf52840
+    pixels:
+      - pin: P0_00
+        protocol: WS2812B
+        size: 24
+      - pin: P0_01
+        size: 3
