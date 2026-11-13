@@ -317,15 +317,25 @@ impl<'a> RenderTarget<'a> {
     fn render_pixel_pins(&mut self) -> Result<String> {
         let pixels = &self.target.pixels;
         let mut pixels_rs = String::new();
-        pixels_rs.push_str("ariel_os_hal::define_peripherals!(PixelPeripherals {\n");
+        pixels_rs.push_str("ariel_os_hal::define_smart_pixel![\n");
 
         for (n, pixel) in pixels.iter().enumerate() {
             let name = format!("pixel{n}");
             self.resources.claim(&pixel.pin, &name)?;
-            let _ = writeln!(pixels_rs, "{}: {},", name, pixel.pin);
+
+            let aliases_string = format_aliases(&pixel.aliases, &name)?;
+
+            let protocol = pixel.protocol.as_ref().map_or("WS2812B", String::as_str);
+
+            writeln!(
+                pixels_rs,
+                "{{ name: Pixel{n}, pin: {}, protocol: {protocol}, size: {}, aliases: [{aliases_string}] }},",
+                pixel.pin, pixel.size,
+            )
+            .unwrap();
         }
 
-        pixels_rs.push_str("});");
+        pixels_rs.push_str("];\n");
 
         Ok(pixels_rs)
     }
