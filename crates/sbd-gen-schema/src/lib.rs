@@ -80,6 +80,7 @@ pub struct Target {
     pub i2c: Vec<I2cBus>,
     #[serde(default)]
     pub uarts: Vec<Uart>,
+    /// Smart Pixels such as WS2812B.
     #[serde(default)]
     pub pixels: Vec<Pixel>,
 }
