@@ -102,8 +102,6 @@ pub struct Package {
     pub name: String,
     pub edition: Option<StringOrWorkspace>,
     pub license: Option<StringOrWorkspace>,
-    #[serde(rename = "rust-version")]
-    pub rust_version: Option<StringOrWorkspace>,
     pub metadata: BTreeMap<String, BTreeMap<String, String>>,
 }
 

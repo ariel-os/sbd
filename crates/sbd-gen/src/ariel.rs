@@ -108,7 +108,6 @@ pub fn render_ariel_board_crate(sbd: &SbdFile, package: &str) -> Result<FileMap>
         use crate::krate::workspace;
         board_crate.manifest.package.edition = workspace();
         board_crate.manifest.package.license = workspace();
-        board_crate.manifest.package.rust_version = workspace();
 
         // Write the tool version into the generated manifest.
         {
